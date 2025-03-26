@@ -13,17 +13,21 @@ const CollegeList: React.FC = () => {
   const [matches, setMatches] = useState(calculateCollegeMatches(profile, colleges));
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLocation, setFilterLocation] = useState('all');
+  const [filterScholarship, setFilterScholarship] = useState('all');
   
   // Recalculate matches whenever the profile changes
   useEffect(() => {
     setMatches(calculateCollegeMatches(profile, colleges));
   }, [profile]);
   
-  // Filtered colleges based on search and location
+  // Filtered colleges based on search, location, and international scholarships
   const filteredColleges = matches.filter(match => {
     const nameMatch = match.college.name.toLowerCase().includes(searchTerm.toLowerCase());
     const locationMatch = filterLocation === 'all' ? true : match.college.location === filterLocation;
-    return nameMatch && locationMatch;
+    const scholarshipMatch = filterScholarship === 'all' ? true : 
+                           (filterScholarship === 'yes' ? match.college.internationalScholarships : !match.college.internationalScholarships);
+    
+    return nameMatch && locationMatch && scholarshipMatch;
   });
   
   return (
@@ -51,6 +55,22 @@ const CollegeList: React.FC = () => {
             <SelectItem value="South">South</SelectItem>
           </SelectContent>
         </Select>
+        
+        {profile.isInternationalStudent && (
+          <Select
+            value={filterScholarship}
+            onValueChange={setFilterScholarship}
+          >
+            <SelectTrigger className="md:w-[210px]">
+              <SelectValue placeholder="All scholarship options" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All scholarship options</SelectItem>
+              <SelectItem value="yes">Has international scholarships</SelectItem>
+              <SelectItem value="no">No international scholarships</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
       
       <div className="space-y-4">
@@ -66,13 +86,18 @@ const CollegeList: React.FC = () => {
                 matchPercentage={match.matchPercentage}
                 matchReasons={match.matchReasons}
                 cautionPoints={match.cautionPoints}
+                isInternational={profile.isInternationalStudent}
               />
             ))}
           </>
         ) : (
           <div className="text-center py-12">
             <p className="text-lg mb-4">No colleges match your current filters</p>
-            <Button onClick={() => { setSearchTerm(''); setFilterLocation('all'); }}>
+            <Button onClick={() => { 
+              setSearchTerm(''); 
+              setFilterLocation('all'); 
+              setFilterScholarship('all');
+            }}>
               Clear Filters
             </Button>
           </div>

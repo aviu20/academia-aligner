@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CollegeList from '@/components/colleges/CollegeList';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/data/userData';
 
 const Results: React.FC = () => {
@@ -46,6 +47,30 @@ const Results: React.FC = () => {
                   <span className="font-medium">{profile.preferredLocation}</span>
                 </div>
               </div>
+              
+              {profile.isInternationalStudent && (
+                <div className="mt-3 pt-3 border-t border-border/30">
+                  <Badge variant="outline" className="mb-2">International Student</Badge>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    {profile.englishProficiency.toefl && (
+                      <div>
+                        <span className="block text-muted-foreground">TOEFL</span>
+                        <span className="font-medium">{profile.englishProficiency.toefl}</span>
+                      </div>
+                    )}
+                    {profile.englishProficiency.ielts && (
+                      <div>
+                        <span className="block text-muted-foreground">IELTS</span>
+                        <span className="font-medium">{profile.englishProficiency.ielts}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="block text-muted-foreground">Needs Scholarship</span>
+                      <span className="font-medium">{profile.needsScholarship ? 'Yes' : 'No'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           

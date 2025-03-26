@@ -10,13 +10,15 @@ interface CollegeCardProps {
   matchPercentage: number;
   matchReasons: string[];
   cautionPoints: string[];
+  isInternational?: boolean;
 }
 
 const CollegeCard: React.FC<CollegeCardProps> = ({
   college,
   matchPercentage,
   matchReasons,
-  cautionPoints
+  cautionPoints,
+  isInternational = false
 }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -47,6 +49,14 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
               <span className="font-medium"> Avg GPA:</span> {college.averageGPA} • 
               <span className="font-medium"> Avg SAT:</span> {college.averageSAT}
             </p>
+            
+            {isInternational && (
+              <p className="text-sm mb-3">
+                <span className="font-medium">International:</span> {college.internationalStudentPercentage}% • 
+                <span className="font-medium"> TOEFL min:</span> {college.englishRequirements.toefl} • 
+                <span className="font-medium"> IELTS min:</span> {college.englishRequirements.ielts}
+              </p>
+            )}
             
             <div className="mb-3">
               <p className="text-xs uppercase font-medium mb-1 text-muted-foreground">Match Highlights</p>
@@ -101,6 +111,50 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
                 <li>• Research Rating: {Array(college.researchOpportunities).fill('★').join('')}</li>
                 <li>• Dorm Life: {Array(college.dormLifeQuality).fill('★').join('')}</li>
               </ul>
+            </div>
+          </div>
+          
+          {isInternational && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">International Student Support</h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• International Population: {college.internationalStudentPercentage}%</li>
+                <li>• Visa Support: {Array(college.visaSupport).fill('★').join('')}</li>
+                <li>• International Scholarships: {college.internationalScholarships ? 'Available' : 'Limited'}</li>
+                <li>• Min. TOEFL: {college.englishRequirements.toefl}</li>
+                <li>• Min. IELTS: {college.englishRequirements.ielts}</li>
+              </ul>
+            </div>
+          )}
+          
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2">Admission Priorities</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {Object.entries(college.admissionFactors)
+                .filter(([_, value]) => value > 0)
+                .sort(([_, a], [__, b]) => b - a)
+                .slice(0, 6)
+                .map(([factor, value]) => {
+                  const formatFactor = (key: string) => {
+                    return key
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, (str) => str.toUpperCase());
+                  };
+                  
+                  const getImportanceText = (val: number) => {
+                    if (val === 5) return 'Very Important';
+                    if (val === 3) return 'Important';
+                    if (val === 1) return 'Considered';
+                    return 'Not Considered';
+                  };
+                  
+                  return (
+                    <div key={factor} className="text-xs p-2 border rounded">
+                      <div className="font-medium">{formatFactor(factor)}</div>
+                      <div className="text-muted-foreground">{getImportanceText(value)}</div>
+                    </div>
+                  );
+              })}
             </div>
           </div>
           
