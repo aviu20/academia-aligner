@@ -16,6 +16,7 @@ const ProfileForm: React.FC = () => {
   
   const [formState, setFormState] = useState<UserProfile>(profile);
   const [submitting, setSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("academics");
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -85,11 +86,30 @@ const ProfileForm: React.FC = () => {
       <h2 className="text-2xl font-semibold mb-6">Your Academic Profile</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Tabs defaultValue="academics" className="w-full">
+        <Tabs 
+          defaultValue="academics" 
+          className="w-full tabs-highlighted"
+          onValueChange={setActiveTab}
+        >
           <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="academics">Academics</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="international">International</TabsTrigger>
+            <TabsTrigger 
+              value="academics" 
+              className={activeTab === "academics" ? "active-tab" : ""}
+            >
+              Academics
+            </TabsTrigger>
+            <TabsTrigger 
+              value="preferences" 
+              className={activeTab === "preferences" ? "active-tab" : ""}
+            >
+              Preferences
+            </TabsTrigger>
+            <TabsTrigger 
+              value="international" 
+              className={activeTab === "international" ? "active-tab" : ""}
+            >
+              International
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="academics" className="space-y-6">
@@ -393,7 +413,7 @@ const ProfileForm: React.FC = () => {
         
         <Button 
           type="submit" 
-          className="w-full transitions-all" 
+          className="w-full transitions-all button-gold-shadow" 
           disabled={submitting}
         >
           {submitting ? 'Processing...' : 'Find My College Matches'}

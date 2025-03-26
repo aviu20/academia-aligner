@@ -33,7 +33,10 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
         {/* College info */}
         <div className="flex-grow">
           <h3 className="text-xl font-semibold">{college.name}</h3>
-          <p className="text-sm text-muted-foreground mb-2">{college.location} • {(college.acceptanceRate * 100).toFixed(1)}% Acceptance</p>
+          <p className="text-sm text-muted-foreground mb-1">{college.location} • {(college.acceptanceRate * 100).toFixed(1)}% Acceptance</p>
+          
+          {/* Motto at the top in italics and gold */}
+          <p className="text-sm italic text-gold mb-3">"{college.motto}"</p>
           
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 mb-3">
@@ -156,10 +159,6 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
                   );
               })}
             </div>
-          </div>
-          
-          <div className="mt-4">
-            <p className="text-sm italic">"{college.motto}"</p>
           </div>
         </div>
       )}

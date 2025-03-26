@@ -1,4 +1,5 @@
 
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -17,6 +18,14 @@
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em hsla(184, 73%, 60%, 0.67)); /* 52CEDF - links color */
+}
+
+.button-gold-shadow {
+  box-shadow: 0 4px 14px 0 rgba(197, 164, 109, 0.25);
+}
+
+.button-gold-shadow:hover {
+  box-shadow: 0 6px 20px 0 rgba(197, 164, 109, 0.35);
 }
 
 @keyframes logo-spin {
@@ -41,3 +50,4 @@
 .read-the-docs {
   color: #888;
 }
+
