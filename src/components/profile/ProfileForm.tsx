@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../ui-custom/GlassCard';
@@ -9,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUserProfile } from '@/data/userData';
+import { useUserProfile, UserProfile } from '@/data/userData';
 
 const ProfileForm: React.FC = () => {
   const { profile, updateProfile } = useUserProfile();
   const navigate = useNavigate();
   
-  const [formState, setFormState] = useState(profile);
+  const [formState, setFormState] = useState<UserProfile>(profile);
   const [submitting, setSubmitting] = useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,14 +33,16 @@ const ProfileForm: React.FC = () => {
     }
   };
   
-  const handleNestedChange = (parent: string, field: string, value: any) => {
-    setFormState({
-      ...formState,
-      [parent]: {
-        ...formState[parent as keyof typeof formState],
-        [field]: value
-      }
-    });
+  const handleNestedChange = (parent: keyof UserProfile, field: string, value: any) => {
+    if (parent === 'englishProficiency') {
+      setFormState({
+        ...formState,
+        englishProficiency: {
+          ...formState.englishProficiency,
+          [field]: value
+        }
+      });
+    }
   };
   
   const handleSliderChange = (name: string, value: number[]) => {
