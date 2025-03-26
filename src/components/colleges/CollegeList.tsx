@@ -12,7 +12,7 @@ const CollegeList: React.FC = () => {
   const { profile } = useUserProfile();
   const [matches, setMatches] = useState(calculateCollegeMatches(profile, colleges));
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterLocation, setFilterLocation] = useState('');
+  const [filterLocation, setFilterLocation] = useState('all');
   
   // Recalculate matches whenever the profile changes
   useEffect(() => {
@@ -22,7 +22,7 @@ const CollegeList: React.FC = () => {
   // Filtered colleges based on search and location
   const filteredColleges = matches.filter(match => {
     const nameMatch = match.college.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const locationMatch = filterLocation ? match.college.location === filterLocation : true;
+    const locationMatch = filterLocation === 'all' ? true : match.college.location === filterLocation;
     return nameMatch && locationMatch;
   });
   
@@ -44,7 +44,7 @@ const CollegeList: React.FC = () => {
             <SelectValue placeholder="All locations" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All locations</SelectItem>
+            <SelectItem value="all">All locations</SelectItem>
             <SelectItem value="West Coast">West Coast</SelectItem>
             <SelectItem value="East Coast">East Coast</SelectItem>
             <SelectItem value="Midwest">Midwest</SelectItem>
@@ -72,7 +72,7 @@ const CollegeList: React.FC = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-lg mb-4">No colleges match your current filters</p>
-            <Button onClick={() => { setSearchTerm(''); setFilterLocation(''); }}>
+            <Button onClick={() => { setSearchTerm(''); setFilterLocation('all'); }}>
               Clear Filters
             </Button>
           </div>
