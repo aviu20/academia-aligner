@@ -1,9 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import AuthModal from '../auth/AuthModal';
 
 const Header: React.FC = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass dark:glass-dark transitions-all">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -17,7 +23,31 @@ const Header: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-8">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/results">Matches</NavLink>
-          <NavLink to="#about">About</NavLink>
+          
+          <div className="space-x-2">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  Hi, {user?.username}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={logout}
+                  className="transitions-all"
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => setAuthModalOpen(true)}
+                className="transitions-all button-gold-shadow"
+              >
+                Login / Sign Up
+              </Button>
+            )}
+          </div>
         </nav>
         
         <div className="md:hidden">
@@ -29,6 +59,8 @@ const Header: React.FC = () => {
           </button>
         </div>
       </div>
+      
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>
   );
 };

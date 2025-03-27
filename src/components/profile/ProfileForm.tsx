@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../ui-custom/GlassCard';
@@ -9,9 +10,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProfile, UserProfile } from '@/data/userData';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
-const ProfileForm: React.FC = () => {
+interface ProfileFormProps {
+  onAuthRequired: () => void;
+}
+
+const ProfileForm: React.FC<ProfileFormProps> = ({ onAuthRequired }) => {
   const { profile, updateProfile } = useUserProfile();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   
   const [formState, setFormState] = useState<UserProfile>(profile);
@@ -69,6 +78,17 @@ const ProfileForm: React.FC = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please login or signup to find your college matches.",
+      });
+      onAuthRequired();
+      return;
+    }
+    
     setSubmitting(true);
     
     // Update the global state
@@ -368,6 +388,36 @@ const ProfileForm: React.FC = () => {
               
               {formState.isInternationalStudent && (
                 <>
+                  <div className="space-y-3 mt-4">
+                    <Label htmlFor="country">Country of Origin</Label>
+                    <Select 
+                      onValueChange={(value) => handleSelectChange('country', value)}
+                      value={formState.country || ''}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="china">China</SelectItem>
+                        <SelectItem value="india">India</SelectItem>
+                        <SelectItem value="south_korea">South Korea</SelectItem>
+                        <SelectItem value="canada">Canada</SelectItem>
+                        <SelectItem value="saudi_arabia">Saudi Arabia</SelectItem>
+                        <SelectItem value="vietnam">Vietnam</SelectItem>
+                        <SelectItem value="brazil">Brazil</SelectItem>
+                        <SelectItem value="mexico">Mexico</SelectItem>
+                        <SelectItem value="nigeria">Nigeria</SelectItem>
+                        <SelectItem value="turkey">Turkey</SelectItem>
+                        <SelectItem value="japan">Japan</SelectItem>
+                        <SelectItem value="indonesia">Indonesia</SelectItem>
+                        <SelectItem value="uk">United Kingdom</SelectItem>
+                        <SelectItem value="germany">Germany</SelectItem>
+                        <SelectItem value="france">France</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <div className="space-y-3 mt-4">
                     <Label htmlFor="toefl">TOEFL Score (0-120)</Label>
                     <Input

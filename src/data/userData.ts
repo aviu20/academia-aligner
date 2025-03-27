@@ -5,70 +5,63 @@ export interface UserProfile {
   gpa: number;
   satScore: number;
   actScore: number;
-  extracurriculars: string[];
   intendedMajor: string;
+  academicRigorScore: number;
+  classRank: number;
   preferredLocation: string;
   maxTuition: number;
   interestsInDormLife: boolean;
-  sportsImportance: number; // 1-5 scale
-  researchOpportunitiesImportance: number; // 1-5 scale
-  // International student specific fields
+  hasSignificantExtracurriculars: boolean;
+  hasSpecialTalent: boolean;
+  hasVolunteerExperience: boolean;
+  hasWorkExperience: boolean;
+  hasRecommendationLetters: boolean;
+  sportsImportance: number;
+  researchOpportunitiesImportance: number;
+  essayQuality: number;
   isInternationalStudent: boolean;
+  country?: string;
   englishProficiency: {
     toefl?: number;
     ielts?: number;
   };
   needsScholarship: boolean;
-  // Common Data Set factors (aligned with Section C7)
-  academicRigorScore: number; // 1-5 scale, how rigorous their high school curriculum was
-  classRank?: number; // Percentile rank in class (0-100)
-  hasRecommendationLetters: boolean;
-  hasSignificantExtracurriculars: boolean;
-  hasSpecialTalent: boolean; // Special ability (athletic, artistic, etc.)
-  hasVolunteerExperience: boolean;
-  hasWorkExperience: boolean;
-  essayQuality: number; // 1-5 scale, self-assessment of application essay quality
 }
 
-const initialUserProfile: UserProfile = {
-  gpa: 3.8,
+interface UserProfileStore {
+  profile: UserProfile;
+  updateProfile: (profile: UserProfile) => void;
+}
+
+// Default profile data
+const initialProfile: UserProfile = {
+  gpa: 3.7,
   satScore: 1350,
-  actScore: 29,
-  extracurriculars: ['Student Government', 'Debate Club'],
+  actScore: 28,
   intendedMajor: 'Computer Science',
-  preferredLocation: 'West Coast',
-  maxTuition: 40000,
-  interestsInDormLife: true,
-  sportsImportance: 3,
-  researchOpportunitiesImportance: 4,
-  // International student default values
-  isInternationalStudent: false,
-  englishProficiency: {
-    toefl: 100,
-    ielts: 7.0
-  },
-  needsScholarship: false,
-  // Common Data Set factors default values
   academicRigorScore: 4,
-  classRank: 85,
-  hasRecommendationLetters: true,
+  classRank: 90,
+  preferredLocation: 'West Coast',
+  maxTuition: 25000,
+  interestsInDormLife: true,
   hasSignificantExtracurriculars: true,
   hasSpecialTalent: false,
   hasVolunteerExperience: true,
   hasWorkExperience: false,
-  essayQuality: 4
+  hasRecommendationLetters: true,
+  sportsImportance: 3,
+  researchOpportunitiesImportance: 4,
+  essayQuality: 4,
+  isInternationalStudent: false,
+  country: undefined,
+  englishProficiency: {
+    toefl: undefined,
+    ielts: undefined
+  },
+  needsScholarship: false
 };
 
-interface UserProfileState {
-  profile: UserProfile;
-  updateProfile: (updates: Partial<UserProfile>) => void;
-  resetProfile: () => void;
-}
-
-export const useUserProfile = create<UserProfileState>((set) => ({
-  profile: initialUserProfile,
-  updateProfile: (updates) => set((state) => ({ 
-    profile: { ...state.profile, ...updates } 
-  })),
-  resetProfile: () => set({ profile: initialUserProfile })
+export const useUserProfile = create<UserProfileStore>((set) => ({
+  profile: initialProfile,
+  updateProfile: (profile) => set({ profile })
 }));
