@@ -24,6 +24,13 @@ interface CollegeWeights {
   international?: number;
 }
 
+const IMPORTANCE_WEIGHTS = {
+  veryImportant: 0.4,
+  important: 0.3,
+  considered: 0.2,
+  notConsidered: 0
+};
+
 function getWeightsForCollege(college: College, isInternational: boolean): CollegeWeights {
   const totalImportance = Object.values(college.admissionFactors).reduce((sum, val) => sum + val, 0);
   
@@ -60,11 +67,19 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
   return colleges.map(college => {
     const weights = getWeightsForCollege(college, userProfile.isInternationalStudent);
     
-    const gpaScore = calculateGpaMatch(userProfile.gpa, college.averageGPA);
-    const satScore = calculateSatMatch(userProfile.satScore, college.averageSAT);
-    const actScore = calculateActMatch(userProfile.actScore, college.averageACT);
+    const gpaImportance = Math.min(college.admissionFactors.academicGPA / 5, 1) * IMPORTANCE_WEIGHTS.veryImportant;
+    const testScoreImportance = Math.min(college.admissionFactors.standardizedTests / 5, 1) * IMPORTANCE_WEIGHTS.important;
+    
+    const gpaScore = calculateGpaMatch(userProfile.gpa, college.averageGPA) * gpaImportance;
+    const satScore = calculateSatMatch(userProfile.satScore, college.averageSAT) * testScoreImportance;
+    const actScore = calculateActMatch(userProfile.actScore, college.averageACT) * testScoreImportance;
+    
     const testScore = Math.max(satScore, actScore);
-    const academicScore = (gpaScore + testScore) / 2;
+    
+    const academicScore = (
+      gpaScore / gpaImportance + 
+      testScore / testScoreImportance
+    ) / (gpaImportance > 0 && testScoreImportance > 0 ? 2 : (gpaImportance > 0 || testScoreImportance > 0 ? 1 : 1));
     
     const majorScore = calculateMajorMatch(userProfile.intendedMajor, college.strongMajors);
     const locationScore = userProfile.preferredLocation === college.location ? 1.0 : 0.5;
@@ -127,13 +142,13 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
     }
     
     let totalScore = (
-      academicScore * weights.academics +
+      academicScore * weights.academics * 1.5 + 
       majorScore * weights.major +
       locationScore * weights.location +
       financialScore * weights.financials +
       lifestyleScore * weights.lifestyle +
-      academicRigorScore * weights.academics +
-      classRankScore * weights.academics +
+      academicRigorScore * weights.academics * 0.5 +
+      classRankScore * weights.academics * 0.5 +
       essayScore * weights.essay +
       recommendationScore * weights.recommendation +
       extracurricularScore * weights.extracurricular +
@@ -152,6 +167,8 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
       userProfile, 
       college, 
       {
+        gpaScore: gpaScore / gpaImportance,
+        testScore: testScore / testScoreImportance,
         academicScore,
         majorScore,
         locationScore, 
@@ -171,6 +188,8 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
       userProfile,
       college,
       {
+        gpaScore: gpaScore / gpaImportance,
+        testScore: testScore / testScoreImportance,
         academicScore,
         majorScore,
         locationScore,
@@ -189,20 +208,33 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
 }
 
 function calculateGpaMatch(userGpa: number, collegeGpa: number): number {
-  if (userGpa >= collegeGpa) return 1.0;
+  if (userGpa >= collegeGpa + 0.2) return 1.0;
+  if (userGpa >= collegeGpa) return 0.9;
   const gap = collegeGpa - userGpa;
-  return Math.max(0, 1.0 - gap/collegeGpa);
+  if (gap <= 0.3) return 0.7;
+  if (gap <= 0.5) return 0.5;
+  return Math.max(0, 1.0 - gap/collegeGpa * 1.5);
 }
 
 function calculateSatMatch(userSat: number, collegeSat: number): number {
-  if (userSat >= collegeSat) return 1.0;
+  if (!userSat || userSat === 0) return 0.5;
+  if (userSat >= collegeSat + 100) return 1.0;
+  if (userSat >= collegeSat) return 0.9;
   const gap = collegeSat - userSat;
+  if (gap <= 50) return 0.8;
+  if (gap <= 100) return 0.6;
+  if (gap <= 200) return 0.4;
   return Math.max(0, 1.0 - gap/600);
 }
 
 function calculateActMatch(userAct: number, collegeAct: number): number {
-  if (userAct >= collegeAct) return 1.0;
+  if (!userAct || userAct === 0) return 0.5;
+  if (userAct >= collegeAct + 3) return 1.0;
+  if (userAct >= collegeAct) return 0.9;
   const gap = collegeAct - userAct;
+  if (gap <= 1) return 0.8;
+  if (gap <= 2) return 0.6;
+  if (gap <= 4) return 0.4;
   return Math.max(0, 1.0 - gap/12);
 }
 
@@ -254,6 +286,8 @@ function generateMatchReasons(
   user: UserProfile, 
   college: College, 
   scores: {
+    gpaScore?: number;
+    testScore?: number;
     academicScore: number;
     majorScore: number;
     locationScore: number;
@@ -270,8 +304,20 @@ function generateMatchReasons(
 ): string[] {
   const reasons: string[] = [];
   
+  if (scores.gpaScore && scores.gpaScore > 0.9) {
+    reasons.push(`Your GPA (${user.gpa.toFixed(1)}) is well-matched with their average (${college.averageGPA.toFixed(1)})`);
+  }
+  
+  if (scores.testScore && scores.testScore > 0.9) {
+    if (user.satScore > user.actScore * 36) {
+      reasons.push(`Your SAT score (${user.satScore}) aligns well with their admitted student profile`);
+    } else {
+      reasons.push(`Your ACT score (${user.actScore}) aligns well with their admitted student profile`);
+    }
+  }
+  
   if (scores.academicScore > 0.9) {
-    reasons.push(`Strong academic match for your profile (GPA, test scores)`);
+    reasons.push(`Strong overall academic match for your profile`);
   } else if (scores.academicScore > 0.7) {
     reasons.push(`Good academic fit for your profile`);
   }
@@ -341,6 +387,8 @@ function generateCautionPoints(
   user: UserProfile,
   college: College,
   scores: {
+    gpaScore?: number;
+    testScore?: number;
     academicScore: number;
     majorScore: number;
     locationScore: number;
@@ -350,8 +398,21 @@ function generateCautionPoints(
 ): string[] {
   const cautions: string[] = [];
   
+  if (scores.gpaScore && scores.gpaScore < 0.6) {
+    cautions.push(`Your GPA (${user.gpa.toFixed(1)}) is below their typical admitted student (${college.averageGPA.toFixed(1)})`);
+  }
+  
+  if (scores.testScore && scores.testScore < 0.6) {
+    if (user.satScore > 0) {
+      cautions.push(`Your SAT score (${user.satScore}) is below their average (${college.averageSAT})`);
+    }
+    if (user.actScore > 0) {
+      cautions.push(`Your ACT score (${user.actScore}) is below their average (${college.averageACT})`);
+    }
+  }
+  
   if (scores.academicScore < 0.7) {
-    cautions.push(`Your academic profile is below their typical admitted student`);
+    cautions.push(`Your overall academic profile is below their typical admitted student`);
   }
   
   if (scores.majorScore < 0.5) {
