@@ -1,287 +1,301 @@
 
 import React, { useState, useEffect } from 'react';
+import { scholarships, scholarshipTypes, fieldsOfStudy } from '@/data/scholarshipData';
 import { useUserProfile } from '@/data/userData';
-import { scholarships, scholarshipTypes, degreeTypes, fieldsOfStudy, Scholarship } from '@/data/scholarshipData';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GraduationCap, BookOpen, DollarSign, Users } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CalendarClock, ExternalLink, Search, Filter, Award, DollarSign, GraduationCap, Globe } from 'lucide-react';
 
 const ScholarshipFinder: React.FC = () => {
   const { profile } = useUserProfile();
   const [searchTerm, setSearchTerm] = useState('');
-  const [degreeType, setDegreeType] = useState('bachelors');
-  const [fieldOfStudy, setFieldOfStudy] = useState(profile.intendedMajor || 'Any');
-  const [scholarshipType, setScholarshipType] = useState<string>('');
-  const [filteredScholarships, setFilteredScholarships] = useState<Scholarship[]>([]);
+  const [scholarshipType, setScholarshipType] = useState('all');
+  const [fieldOfStudy, setFieldOfStudy] = useState('all');
+  const [isFullRide, setIsFullRide] = useState<'all' | 'yes' | 'no'>('all');
   
-  useEffect(() => {
-    filterScholarships();
-  }, [searchTerm, degreeType, fieldOfStudy, scholarshipType]);
+  // Filter scholarships based on user inputs
+  const filteredScholarships = scholarships.filter(scholarship => {
+    // Search term filter
+    const matchesSearch = 
+      scholarship.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      scholarship.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Scholarship type filter
+    const matchesType = scholarshipType === 'all' || scholarship.scholarshipType === scholarshipType;
+    
+    // Field of study filter
+    const matchesField = fieldOfStudy === 'all' || 
+      scholarship.fieldOfStudy.includes(fieldOfStudy) || 
+      scholarship.fieldOfStudy.includes('Any');
+    
+    // Full ride filter
+    const matchesFullRide = 
+      isFullRide === 'all' || 
+      (isFullRide === 'yes' && scholarship.isFullRide) ||
+      (isFullRide === 'no' && !scholarship.isFullRide);
+    
+    return matchesSearch && matchesType && matchesField && matchesFullRide;
+  });
   
-  const filterScholarships = () => {
-    let filtered = [...scholarships];
+  // Filter for recommended scholarships based on user profile
+  const recommendedScholarships = scholarships.filter(scholarship => {
+    // Check if the student meets GPA requirements
+    const meetsGPA = !scholarship.minimumGPA || profile.gpa >= scholarship.minimumGPA;
     
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(scholarship => 
-        scholarship.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        scholarship.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    // Check if the student meets SAT requirements
+    const meetsSAT = !scholarship.minimumSAT || profile.satScore >= scholarship.minimumSAT;
     
-    // Filter by field of study if not "Any"
-    if (fieldOfStudy && fieldOfStudy !== 'Any') {
-      filtered = filtered.filter(scholarship => 
-        scholarship.fieldOfStudy.includes('Any') || 
-        scholarship.fieldOfStudy.includes(fieldOfStudy)
-      );
-    }
+    // Check if the student meets ACT requirements
+    const meetsACT = !scholarship.minimumACT || profile.actScore >= scholarship.minimumACT;
     
-    // Filter by scholarship type
-    if (scholarshipType) {
-      filtered = filtered.filter(scholarship => 
-        scholarship.scholarshipType === scholarshipType
-      );
-    }
+    // Check if the scholarship is for international students
+    const matchesInternational = 
+      !scholarship.country || 
+      (scholarship.country === 'International' && profile.isInternationalStudent) ||
+      (scholarship.country !== 'International');
     
-    // Apply profile-based filtering
-    filtered = filtered.filter(scholarship => {
-      // GPA check
-      if (scholarship.minimumGPA && profile.gpa < scholarship.minimumGPA) {
-        return false;
-      }
-      
-      // SAT check
-      if (scholarship.minimumSAT && profile.satScore < scholarship.minimumSAT) {
-        return false;
-      }
-      
-      // ACT check
-      if (scholarship.minimumACT && profile.actScore < scholarship.minimumACT) {
-        return false;
-      }
-      
-      // International student check
-      if (scholarship.country === 'International' && !profile.isInternationalStudent) {
-        return false;
-      }
-      
-      return true;
-    });
+    // Check if the field of study matches
+    const matchesField = 
+      scholarship.fieldOfStudy.includes(profile.intendedMajor) || 
+      scholarship.fieldOfStudy.includes('Any');
     
-    setFilteredScholarships(filtered);
-  };
-
-  const getScholarshipIcon = (type: string) => {
-    switch(type) {
-      case 'merit':
-        return <GraduationCap className="w-4 h-4" />;
-      case 'research':
-        return <BookOpen className="w-4 h-4" />;
-      case 'need':
-        return <DollarSign className="w-4 h-4" />;
-      case 'diversity':
-        return <Users className="w-4 h-4" />;
-      default:
-        return <GraduationCap className="w-4 h-4" />;
-    }
-  };
+    // Check if the scholarship type matches user needs
+    const matchesNeedBased = 
+      scholarship.scholarshipType !== 'need' || 
+      (scholarship.scholarshipType === 'need' && profile.needsScholarship);
+    
+    return meetsGPA && meetsSAT && meetsACT && matchesInternational && matchesField && matchesNeedBased;
+  });
   
-  const getScholarshipTypeLabel = (type: string) => {
-    const found = scholarshipTypes.find(t => t.value === type);
-    return found ? found.label : type;
-  };
-  
-  const getEligibilityMatchPercentage = (scholarship: Scholarship) => {
-    let metCriteria = 0;
-    let totalCriteria = 0;
-    
-    // GPA
-    if (scholarship.minimumGPA) {
-      totalCriteria++;
-      if (profile.gpa >= scholarship.minimumGPA) metCriteria++;
-    }
-    
-    // SAT
-    if (scholarship.minimumSAT) {
-      totalCriteria++;
-      if (profile.satScore >= scholarship.minimumSAT) metCriteria++;
-    }
-    
-    // ACT
-    if (scholarship.minimumACT) {
-      totalCriteria++;
-      if (profile.actScore >= scholarship.minimumACT) metCriteria++;
-    }
-    
-    // Field of Study
-    totalCriteria++;
-    if (scholarship.fieldOfStudy.includes('Any') || 
-        scholarship.fieldOfStudy.includes(profile.intendedMajor)) {
-      metCriteria++;
-    }
-    
-    // International status match
-    if (scholarship.country === 'International') {
-      totalCriteria++;
-      if (profile.isInternationalStudent) metCriteria++;
-    }
-    
-    return totalCriteria > 0 ? Math.round((metCriteria / totalCriteria) * 100) : 100;
+  const clearFilters = () => {
+    setSearchTerm('');
+    setScholarshipType('all');
+    setFieldOfStudy('all');
+    setIsFullRide('all');
   };
   
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Find Scholarships</h1>
+        <h1 className="text-2xl font-bold">Scholarship Finder</h1>
         <p className="text-muted-foreground">
-          Discover scholarships that match your academic profile and interests
+          Search and filter scholarships to help fund your education
         </p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <Select value={degreeType} onValueChange={setDegreeType}>
-            <SelectTrigger>
-              <GraduationCap className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Degree Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {degreeTypes.map(type => (
-                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Search and Filter
+          </CardTitle>
+          <CardDescription>
+            Find scholarships that match your qualifications and interests
+          </CardDescription>
+        </CardHeader>
         
-        <div>
-          <Select value={fieldOfStudy} onValueChange={setFieldOfStudy}>
-            <SelectTrigger>
-              <BookOpen className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Field of Study" />
-            </SelectTrigger>
-            <SelectContent>
-              {fieldsOfStudy.map(field => (
-                <SelectItem key={field.value} value={field.value}>{field.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-2">
-          <Input
-            placeholder="Search scholarships by name or description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <Tabs defaultValue="" className="w-full" onValueChange={setScholarshipType}>
-        <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-4">
-          <TabsTrigger value="" className="flex-1">All Types</TabsTrigger>
-          {scholarshipTypes.map(type => (
-            <TabsTrigger key={type.value} value={type.value} className="flex-1">
-              {getScholarshipIcon(type.value)}
-              <span className="ml-2">{type.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-      
-      <div className="space-y-4">
-        {filteredScholarships.length === 0 ? (
-          <Alert>
-            <AlertDescription>
-              No scholarships match your current criteria. Try adjusting your filters.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Found {filteredScholarships.length} scholarships matching your criteria
-            </p>
+        <CardContent>
+          <div className="space-y-4">
+            <Input
+              placeholder="Search scholarships..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
             
-            {filteredScholarships.map(scholarship => (
-              <Card key={scholarship.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="font-bold text-xl">
-                        {scholarship.name}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {scholarship.description}
-                      </CardDescription>
-                    </div>
-                    
-                    <Badge className={
-                      scholarship.isFullRide 
-                        ? "bg-green-500 hover:bg-green-600" 
-                        : scholarship.scholarshipType === 'merit' 
-                          ? "bg-blue-500 hover:bg-blue-600" 
-                          : scholarship.scholarshipType === 'need' 
-                            ? "bg-purple-500 hover:bg-purple-600" 
-                            : scholarship.scholarshipType === 'diversity'
-                              ? "bg-yellow-500 hover:bg-yellow-600 text-black"
-                              : "bg-indigo-500 hover:bg-indigo-600"
-                    }>
-                      {scholarship.isFullRide ? "Full Ride" : getScholarshipTypeLabel(scholarship.scholarshipType)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pb-3">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Amount</h4>
-                      <p className="text-lg font-semibold">{scholarship.amount}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Deadline</h4>
-                      <p className="text-lg font-semibold">{scholarship.deadline}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-1">Eligibility Match</h4>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={getEligibilityMatchPercentage(scholarship)} className="h-2" />
-                      <span className="text-sm">{getEligibilityMatchPercentage(scholarship)}%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-1">Eligibility Requirements</h4>
-                    <ul className="text-sm list-disc list-inside">
-                      {scholarship.eligibilityRequirements.map((req, index) => (
-                        <li key={index}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button 
-                    className="w-full transitions-all"
-                    onClick={() => window.open(scholarship.applicationLink, '_blank')}
-                  >
-                    Apply Now
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </>
-        )}
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Scholarship Type</label>
+                <Select value={scholarshipType} onValueChange={setScholarshipType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {scholarshipTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Field of Study</label>
+                <Select value={fieldOfStudy} onValueChange={setFieldOfStudy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All fields" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Fields</SelectItem>
+                    {fieldsOfStudy.map((field) => (
+                      <SelectItem key={field.value} value={field.value}>
+                        {field.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Full Ride</label>
+                <Select value={isFullRide} onValueChange={(value) => setIsFullRide(value as 'all' | 'yes' | 'no')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All scholarships" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Scholarships</SelectItem>
+                    <SelectItem value="yes">Full Ride Only</SelectItem>
+                    <SelectItem value="no">Partial Scholarships</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                <Filter className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Tabs defaultValue="all">
+        <TabsList className="w-full mb-4">
+          <TabsTrigger value="all" className="flex-1">All Scholarships</TabsTrigger>
+          <TabsTrigger value="recommended" className="flex-1">Recommended for You</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all">
+          {filteredScholarships.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-lg mb-4">No scholarships match your current filters</p>
+              <Button onClick={clearFilters}>Clear Filters</Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredScholarships.map((scholarship) => (
+                <ScholarshipCard key={scholarship.id} scholarship={scholarship} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="recommended">
+          {recommendedScholarships.length === 0 ? (
+            <Alert className="mb-4">
+              <AlertTitle>No recommended scholarships found</AlertTitle>
+              <AlertDescription>
+                We couldn't find any scholarships that match your profile. Try updating your profile 
+                with more information or browse all available scholarships.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {recommendedScholarships.map((scholarship) => (
+                <ScholarshipCard key={scholarship.id} scholarship={scholarship} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+};
+
+interface ScholarshipCardProps {
+  scholarship: typeof scholarships[0];
+}
+
+const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ scholarship }) => {
+  const getScholarshipTypeIcon = (type: typeof scholarship.scholarshipType) => {
+    switch (type) {
+      case 'merit': return <Award className="h-4 w-4" />;
+      case 'need': return <DollarSign className="h-4 w-4" />;
+      case 'research': return <GraduationCap className="h-4 w-4" />;
+      case 'diversity': return <Globe className="h-4 w-4" />;
+    }
+  };
+  
+  const getScholarshipTypeLabel = (type: typeof scholarship.scholarshipType) => {
+    switch (type) {
+      case 'merit': return 'Merit-Based';
+      case 'need': return 'Need-Based';
+      case 'research': return 'Research-Based';
+      case 'diversity': return 'Diversity';
+    }
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-lg">{scholarship.name}</CardTitle>
+            <CardDescription className="mt-1">
+              {scholarship.description}
+            </CardDescription>
+          </div>
+          
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant={scholarship.isFullRide ? 'default' : 'outline'}>
+              {scholarship.isFullRide ? 'Full Ride' : 'Partial Scholarship'}
+            </Badge>
+            
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" />
+              Deadline: {scholarship.deadline}
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-medium mb-2">Eligibility Requirements</h4>
+            <ul className="list-disc list-inside text-sm space-y-1">
+              {scholarship.eligibilityRequirements.map((req, i) => (
+                <li key={i}>{req}</li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Badge className="flex items-center gap-1" variant="secondary">
+              {getScholarshipTypeIcon(scholarship.scholarshipType)}
+              {getScholarshipTypeLabel(scholarship.scholarshipType)}
+            </Badge>
+            
+            <Badge variant="secondary">{scholarship.amount}</Badge>
+            
+            {scholarship.fieldOfStudy.map((field) => (
+              field !== 'Any' && (
+                <Badge key={field} variant="outline">
+                  {field}
+                </Badge>
+              )
+            ))}
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter>
+        <a href={scholarship.applicationLink} target="_blank" rel="noopener noreferrer">
+          <Button className="w-full sm:w-auto">
+            Apply Now <ExternalLink className="h-4 w-4 ml-1" />
+          </Button>
+        </a>
+      </CardFooter>
+    </Card>
   );
 };
 

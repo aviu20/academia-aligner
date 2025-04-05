@@ -104,7 +104,7 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
                           </p>
                         </div>
                         
-                        <PercentageMatch value={matchPercentage} />
+                        <PercentageMatch percentage={matchPercentage} />
                       </div>
                     </CardHeader>
                     
@@ -112,7 +112,7 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
                       <div className="flex flex-wrap gap-2 mb-4">
                         <Badge variant="outline" className="flex gap-1 items-center">
                           <GraduationCap className="h-3 w-3" />
-                          {college.acceptanceRate * 100}% Acceptance
+                          {(college.acceptanceRate * 100).toFixed(1)}% Acceptance
                         </Badge>
                         
                         <Badge variant="outline" className="flex gap-1 items-center">
@@ -136,9 +136,10 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
                       <div className="flex flex-wrap gap-2">
                         <Button
                           onClick={() => {
-                            document.querySelector('[data-value="journey"]')?.dispatchEvent(
-                              new MouseEvent('click', { bubbles: true })
-                            );
+                            const journeyTab = document.querySelector('[data-value="journey"]');
+                            if (journeyTab && journeyTab instanceof HTMLElement) {
+                              journeyTab.click();
+                            }
                           }}
                           variant="outline"
                           size="sm"
@@ -197,7 +198,7 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
                           </p>
                         </div>
                         
-                        <PercentageMatch value={matchPercentage} />
+                        <PercentageMatch percentage={matchPercentage} />
                       </div>
                     </CardHeader>
                     
@@ -205,7 +206,7 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline" className="flex gap-1 items-center">
                           <GraduationCap className="h-3 w-3" />
-                          {college.acceptanceRate * 100}% Acceptance
+                          {(college.acceptanceRate * 100).toFixed(1)}% Acceptance
                         </Badge>
                         
                         <Badge variant="outline" className="flex gap-1 items-center">

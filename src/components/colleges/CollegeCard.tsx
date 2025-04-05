@@ -14,6 +14,7 @@ interface CollegeCardProps {
   matchReasons: string[];
   cautionPoints: string[];
   isInternational: boolean;
+  initialExpanded?: boolean;
   matchBreakdown: {
     academic: number;
     major: number;
@@ -32,10 +33,11 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   matchReasons, 
   cautionPoints, 
   isInternational,
+  initialExpanded = false,
   matchBreakdown,
   onViewCostOfLiving
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initialExpanded);
   
   const toggleExpand = () => {
     setExpanded(!expanded);
@@ -69,7 +71,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
               <span>{city}, {location}</span>
             </CardDescription>
           </div>
-          <PercentageMatch value={matchPercentage} />
+          <PercentageMatch percentage={matchPercentage} />
         </div>
       </CardHeader>
       
@@ -77,7 +79,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline" className="flex gap-1 items-center">
             <GraduationCap className="h-3 w-3" />
-            {college.acceptanceRate * 100}% Acceptance
+            {(college.acceptanceRate * 100).toFixed(1)}% Acceptance
           </Badge>
           
           <Badge variant="outline" className="flex gap-1 items-center">
@@ -215,24 +217,26 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
       </CardContent>
       
       <CardFooter className="flex flex-col md:flex-row gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full md:w-auto"
-          onClick={toggleExpand}
-        >
-          {expanded ? (
-            <>
-              <ChevronUp className="h-4 w-4 mr-1" />
-              Show Less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="h-4 w-4 mr-1" />
-              Show More
-            </>
-          )}
-        </Button>
+        {!initialExpanded && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full md:w-auto"
+            onClick={toggleExpand}
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-1" />
+                Show More
+              </>
+            )}
+          </Button>
+        )}
         
         {onViewCostOfLiving && (
           <Button 

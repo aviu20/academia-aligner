@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useUserProfile } from '@/data/userData';
 import { 
@@ -124,16 +125,8 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
     setCurrency(newCurrency);
     setCurrencySymbol(currencySymbols[newCurrency as keyof typeof currencySymbols] || '$');
     
-    if (costs) {
-      const cityData = getCityByLocation(selectedCity, selectedState);
-      if (cityData) {
-        const convertedCosts = calculateConvertedCost(
-          cityData.costs,
-          cityData.currencyCode,
-          newCurrency
-        );
-        setCosts(convertedCosts);
-      }
+    if (selectedCity && selectedState) {
+      loadCostData(selectedCity, selectedState);
     }
   };
   

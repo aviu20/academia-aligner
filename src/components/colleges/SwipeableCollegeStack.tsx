@@ -96,7 +96,7 @@ const SwipeableCollegeStack: React.FC<SwipeableCollegeStackProps> = ({
           maxWidth: '384px',
           margin: '0 auto',
         }}
-        drag={isMobile ? "x" : false}
+        drag="x" // Enable drag for all devices, not just mobile
         dragConstraints={{ left: 0, right: 0 }}
         onDragEnd={handleDragEnd}
         animate={{ x: exitX || 0 }}
@@ -122,6 +122,7 @@ const SwipeableCollegeStack: React.FC<SwipeableCollegeStackProps> = ({
               matchReasons={currentMatch.matchReasons}
               cautionPoints={currentMatch.cautionPoints}
               isInternational={isInternational}
+              initialExpanded={true} // Always initially expanded in the dialog
               matchBreakdown={{
                 academic: Math.round(currentMatch.scores?.academicScore * 100) || 75,
                 major: Math.round(currentMatch.scores?.majorScore * 100) || 80,
