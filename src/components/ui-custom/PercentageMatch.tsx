@@ -1,61 +1,33 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 
 interface PercentageMatchProps {
   percentage: number;
   size?: 'sm' | 'md' | 'lg';
-  showLabel?: boolean;
-  className?: string;
 }
 
-const PercentageMatch: React.FC<PercentageMatchProps> = ({
-  percentage,
-  size = 'md',
-  showLabel = true,
-  className
-}) => {
-  // Determine color based on percentage
-  const getColor = (percent: number) => {
-    if (percent >= 85) return 'bg-emerald-500';
-    if (percent >= 70) return 'bg-blue-500';
-    if (percent >= 50) return 'bg-yellow-500';
-    return 'bg-gray-400';
+const PercentageMatch: React.FC<PercentageMatchProps> = ({ percentage, size = 'md' }) => {
+  const roundedPercentage = Math.round(percentage);
+  
+  const getSizeClass = () => {
+    switch (size) {
+      case 'sm': return 'w-12 h-12 text-lg';
+      case 'lg': return 'w-24 h-24 text-3xl';
+      case 'md':
+      default: return 'w-16 h-16 text-xl';
+    }
   };
-
-  // Determine size classes
-  const sizeClasses = {
-    sm: 'w-16 h-16 text-lg',
-    md: 'w-24 h-24 text-2xl',
-    lg: 'w-32 h-32 text-3xl'
+  
+  // Color based on percentage
+  const getColorClass = () => {
+    if (percentage >= 80) return 'bg-green-100 text-green-700 border-green-300';
+    else if (percentage >= 60) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+    else return 'bg-red-100 text-red-700 border-red-300';
   };
-
-  const borderWidth = {
-    sm: 'border-[3px]',
-    md: 'border-4',
-    lg: 'border-[5px]'
-  };
-
+  
   return (
-    <div className={cn("relative flex flex-col items-center", className)}>
-      <div 
-        className={cn(
-          "rounded-full flex items-center justify-center font-semibold text-white",
-          sizeClasses[size],
-          "border border-background",
-          getColor(percentage)
-        )}
-      >
-        <div className="animate-fade-in">
-          {percentage}%
-        </div>
-      </div>
-      
-      {showLabel && (
-        <div className="mt-2 text-sm font-medium text-muted-foreground">
-          Match Score
-        </div>
-      )}
+    <div className={`flex items-center justify-center rounded-full border-2 ${getColorClass()} ${getSizeClass()}`}>
+      <span className="font-bold">{roundedPercentage}%</span>
     </div>
   );
 };
