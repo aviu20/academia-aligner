@@ -176,7 +176,7 @@ const CollegeList: React.FC = () => {
         <TabsContent value="saved" className="mt-0">
           <CollegeSavedList 
             savedColleges={getSavedCollegeMatches()}
-            rejectedColleges={getRejectedColleges()}
+            rejectedColleges={getRejectedCollegeMatches()}
             isInternational={profile.isInternationalStudent}
             onRemove={(collegeId, list) => {
               if (list === 'saved') {
