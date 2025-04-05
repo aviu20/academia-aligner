@@ -12,6 +12,8 @@ import SwipeableCollegeStack from './SwipeableCollegeStack';
 import CollegeSavedList from './CollegeSavedList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import JourneyTabs from '../journey/JourneyTabs';
+import ScholarshipFinder from '../scholarships/ScholarshipFinder';
+import CostOfLivingCalculator from '../cost-of-living/CostOfLivingCalculator';
 
 const CollegeList: React.FC = () => {
   const { profile } = useUserProfile();
@@ -21,6 +23,7 @@ const CollegeList: React.FC = () => {
   const [filterScholarship, setFilterScholarship] = useState('all');
   const [savedColleges, setSavedColleges] = useState<string[]>([]);
   const [rejectedColleges, setRejectedColleges] = useState<string[]>([]);
+  const [selectedCollegeForCost, setSelectedCollegeForCost] = useState<string | undefined>(undefined);
   const isMobile = useIsMobile();
   
   useEffect(() => {
@@ -65,6 +68,15 @@ const CollegeList: React.FC = () => {
     );
   };
   
+  const handleViewCostOfLivingFromCollege = (collegeId: string) => {
+    setSelectedCollegeForCost(collegeId);
+    // Navigate to the cost of living tab
+    const costOfLivingTabTrigger = document.querySelector('[data-value="cost-of-living"]');
+    if (costOfLivingTabTrigger && costOfLivingTabTrigger instanceof HTMLElement) {
+      costOfLivingTabTrigger.click();
+    }
+  };
+  
   return (
     <div className="animate-fade-in">
       <Tabs defaultValue="discover" className="w-full">
@@ -72,6 +84,8 @@ const CollegeList: React.FC = () => {
           <TabsTrigger value="discover" className="flex-1">Discover</TabsTrigger>
           <TabsTrigger value="saved" className="flex-1">My Colleges</TabsTrigger>
           <TabsTrigger value="journey" className="flex-1">Application Journey</TabsTrigger>
+          <TabsTrigger value="scholarships" className="flex-1">Scholarships</TabsTrigger>
+          <TabsTrigger value="cost-of-living" className="flex-1">Cost of Living</TabsTrigger>
         </TabsList>
         
         <TabsContent value="discover" className="mt-0">
@@ -155,6 +169,7 @@ const CollegeList: React.FC = () => {
                           international: profile.isInternationalStudent ? 
                             (Math.round(match.scores?.internationalScore * 100) || 80) : undefined
                         }}
+                        onViewCostOfLiving={() => handleViewCostOfLivingFromCollege(match.college.id)}
                       />
                     ))}
                   </>
@@ -187,11 +202,20 @@ const CollegeList: React.FC = () => {
                 setRejectedColleges(prev => prev.filter(id => id !== collegeId));
               }
             }}
+            onViewCostOfLiving={handleViewCostOfLivingFromCollege}
           />
         </TabsContent>
         
         <TabsContent value="journey" className="mt-0">
           <JourneyTabs savedColleges={getSavedCollegeMatches()} />
+        </TabsContent>
+        
+        <TabsContent value="scholarships" className="mt-0">
+          <ScholarshipFinder />
+        </TabsContent>
+        
+        <TabsContent value="cost-of-living" className="mt-0">
+          <CostOfLivingCalculator collegeId={selectedCollegeForCost} />
         </TabsContent>
       </Tabs>
     </div>
