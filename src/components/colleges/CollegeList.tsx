@@ -87,6 +87,16 @@ const CollegeList: React.FC = () => {
                 matchReasons={match.matchReasons}
                 cautionPoints={match.cautionPoints}
                 isInternational={profile.isInternationalStudent}
+                matchBreakdown={{
+                  academic: Math.round(match.scores?.academicScore * 100) || 75,
+                  major: Math.round(match.scores?.majorScore * 100) || 80,
+                  location: Math.round(match.scores?.locationScore * 100) || 90,
+                  financials: Math.round(match.scores?.financialScore * 100) || 60,
+                  lifestyle: Math.round(match.scores?.lifestyleScore * 100) || 85,
+                  extracurricular: Math.round(match.scores?.extracurricularScore * 100) || 70,
+                  international: profile.isInternationalStudent ? 
+                    (Math.round(match.scores?.internationalScore * 100) || 80) : undefined
+                }}
               />
             ))}
           </>

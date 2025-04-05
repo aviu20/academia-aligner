@@ -4,6 +4,9 @@ import GlassCard from '../ui-custom/GlassCard';
 import PercentageMatch from '../ui-custom/PercentageMatch';
 import { Button } from '@/components/ui/button';
 import { College } from '@/data/collegeData';
+import { ExternalLink } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 
 interface CollegeCardProps {
   college: College;
@@ -11,6 +14,15 @@ interface CollegeCardProps {
   matchReasons: string[];
   cautionPoints: string[];
   isInternational?: boolean;
+  matchBreakdown?: {
+    academic: number;
+    major: number;
+    location: number;
+    financials: number;
+    lifestyle: number;
+    extracurricular: number;
+    international?: number;
+  };
 }
 
 const CollegeCard: React.FC<CollegeCardProps> = ({
@@ -18,9 +30,26 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   matchPercentage,
   matchReasons,
   cautionPoints,
-  isInternational = false
+  isInternational = false,
+  matchBreakdown = {
+    academic: 75,
+    major: 80,
+    location: 90,
+    financials: 60,
+    lifestyle: 85,
+    extracurricular: 70,
+    international: isInternational ? 80 : undefined
+  }
 }) => {
   const [expanded, setExpanded] = useState(false);
+  
+  // Mock data for college culture and environment - would be replaced with real data
+  const collegeEnvironment = {
+    culture: `${college.name} is known for its ${college.sportsRanking >= 4 ? 'vibrant sports culture' : 'academic focus'} and ${college.researchOpportunities >= 4 ? 'strong research community' : 'collaborative learning environment'}. Students describe the campus atmosphere as ${college.dormLifeQuality >= 4 ? 'lively and engaging' : 'focused and determined'}.`,
+    cityLife: `Located in the ${college.location} region, students enjoy ${college.location === 'West Coast' ? 'access to beaches, tech hubs, and mild weather' : college.location === 'East Coast' ? 'proximity to major cities, historical sites, and seasonal weather' : college.location === 'South' ? 'warm climate, rich cultural traditions, and southern hospitality' : 'affordable living, open spaces, and tight-knit communities'}. The area offers plenty of opportunities for ${college.dormLifeQuality >= 4 ? 'social activities' : 'quiet study'} and professional networking.`,
+    clubs: `The university hosts over ${Math.floor(college.studentPopulation / 500)} student organizations, with particularly strong offerings in ${college.strongMajors.join(', ')} related activities. ${college.sportsRanking >= 4 ? 'Sports clubs and intramurals are very popular on campus.' : 'Academic and professional clubs are highly active.'}`,
+    international: isInternational ? `With ${college.internationalStudentPercentage}% international students, the campus has a ${college.internationalStudentPercentage > 10 ? 'strong global community' : 'growing international presence'}. The International Student Association organizes cultural events throughout the year, and the university provides ${college.visaSupport >= 4 ? 'exceptional support services' : 'basic resources'} for international students.` : ''
+  };
   
   return (
     <GlassCard className="overflow-hidden transitions-all">
@@ -96,6 +125,77 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
       {/* Expanded details section */}
       {expanded && (
         <div className="mt-4 pt-4 border-t border-border">
+          {/* Match percentage breakdown section */}
+          <div className="mb-5">
+            <h4 className="text-sm font-medium mb-3">Match Percentage Breakdown</h4>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Academic Fit</span>
+                  <span>{matchBreakdown.academic}%</span>
+                </div>
+                <Progress value={matchBreakdown.academic} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Major Alignment</span>
+                  <span>{matchBreakdown.major}%</span>
+                </div>
+                <Progress value={matchBreakdown.major} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Location Preference</span>
+                  <span>{matchBreakdown.location}%</span>
+                </div>
+                <Progress value={matchBreakdown.location} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Financial Fit</span>
+                  <span>{matchBreakdown.financials}%</span>
+                </div>
+                <Progress value={matchBreakdown.financials} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Campus Lifestyle</span>
+                  <span>{matchBreakdown.lifestyle}%</span>
+                </div>
+                <Progress value={matchBreakdown.lifestyle} className="h-2" />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Extracurricular Match</span>
+                  <span>{matchBreakdown.extracurricular}%</span>
+                </div>
+                <Progress value={matchBreakdown.extracurricular} className="h-2" />
+              </div>
+              {isInternational && matchBreakdown.international && (
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>International Support</span>
+                    <span>{matchBreakdown.international}%</span>
+                  </div>
+                  <Progress value={matchBreakdown.international} className="h-2" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <Separator className="my-4" />
+          
+          {/* Campus Culture & Environment section */}
+          <div className="mb-5">
+            <h4 className="text-sm font-medium mb-3">Campus Culture & Environment</h4>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>{collegeEnvironment.culture}</p>
+              <p>{collegeEnvironment.cityLife}</p>
+              <p>{collegeEnvironment.clubs}</p>
+              {isInternational && <p>{collegeEnvironment.international}</p>}
+            </div>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h4 className="text-sm font-medium mb-2">Notable Facilities</h4>
@@ -159,6 +259,18 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
                   );
               })}
             </div>
+          </div>
+          
+          {/* Admissions page link */}
+          <div className="mt-6 pt-4 border-t border-border">
+            <a 
+              href={`https://${college.name.toLowerCase().replace(/\s+/g, '')}.edu/admissions`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center text-sm text-primary hover:underline"
+            >
+              Visit Admissions Page <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
           </div>
         </div>
       )}

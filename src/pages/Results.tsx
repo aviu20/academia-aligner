@@ -7,6 +7,8 @@ import CollegeList from '@/components/colleges/CollegeList';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/data/userData';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Results: React.FC = () => {
   const { profile } = useUserProfile();
@@ -71,6 +73,30 @@ const Results: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+            
+            <div className="flex items-center gap-2 mt-6 text-sm text-muted-foreground">
+              <span>Match Percentage Explanation</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm p-4">
+                    <p className="mb-2">The match percentage is calculated based on several factors:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Academic Fit: How your GPA and test scores align with the college's averages</li>
+                      <li>Major Alignment: Whether the college is strong in your chosen field</li>
+                      <li>Location: Match with your preferred geographic region</li>
+                      <li>Financial Fit: How the tuition aligns with your budget</li>
+                      <li>Campus Lifestyle: Sports, research, and dorm life preferences</li>
+                      <li>Extracurriculars: How your activities match their priorities</li>
+                      {profile.isInternationalStudent && <li>International Support: Resources and scholarships for international students</li>}
+                    </ul>
+                    <p className="mt-2">Click "Show More" on any college card to see a detailed breakdown.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           

@@ -6,6 +6,22 @@ interface CollegeMatch {
   matchPercentage: number;
   matchReasons: string[];
   cautionPoints: string[];
+  scores?: {
+    academicScore: number;
+    majorScore: number;
+    locationScore: number;
+    financialScore: number;
+    lifestyleScore: number;
+    sportsScore: number;
+    researchScore: number;
+    dormLifeScore: number;
+    internationalScore?: number;
+    academicRigorScore: number;
+    essayScore: number;
+    extracurricularScore: number;
+    gpaScore?: number;
+    testScore?: number;
+  };
 }
 
 interface CollegeWeights {
@@ -163,46 +179,41 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
     
     const matchPercentage = Math.round(Math.min(totalScore * 100, 100));
     
+    const scores = {
+      gpaScore: gpaScore / gpaImportance,
+      testScore: testScore / testScoreImportance,
+      academicScore,
+      majorScore,
+      locationScore, 
+      financialScore,
+      lifestyleScore,
+      sportsScore,
+      researchScore,
+      dormLifeScore,
+      internationalScore,
+      academicRigorScore,
+      essayScore,
+      extracurricularScore
+    };
+    
     const matchReasons = generateMatchReasons(
       userProfile, 
       college, 
-      {
-        gpaScore: gpaScore / gpaImportance,
-        testScore: testScore / testScoreImportance,
-        academicScore,
-        majorScore,
-        locationScore, 
-        financialScore,
-        lifestyleScore,
-        sportsScore,
-        researchScore,
-        dormLifeScore,
-        internationalScore,
-        academicRigorScore,
-        essayScore,
-        extracurricularScore
-      }
+      scores
     );
     
     const cautionPoints = generateCautionPoints(
       userProfile,
       college,
-      {
-        gpaScore: gpaScore / gpaImportance,
-        testScore: testScore / testScoreImportance,
-        academicScore,
-        majorScore,
-        locationScore,
-        financialScore,
-        internationalScore
-      }
+      scores
     );
     
     return {
       college,
       matchPercentage,
       matchReasons,
-      cautionPoints
+      cautionPoints,
+      scores
     };
   }).sort((a, b) => b.matchPercentage - a.matchPercentage);
 }
