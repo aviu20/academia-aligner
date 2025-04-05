@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUserProfile } from '@/data/userData';
 import { 
@@ -44,10 +43,13 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
       if (college) {
         setSelectedCollegeId(collegeId);
         // Extract city and state from college location
-        const [state] = college.location.split(', ');
+        const locationParts = college.location.split(', ');
+        const state = locationParts[0]; // First part is the state (e.g., "West Coast")
+        // For city, we'll use the state as a default since college doesn't have city
+        const city = state;
         setSelectedState(state);
-        setSelectedCity(college.city);
-        loadCostData(college.city, state);
+        setSelectedCity(city);
+        loadCostData(city, state);
       }
     }
   }, [collegeId]);
@@ -108,11 +110,12 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
     const college = colleges.find(c => c.id === collegeId);
     
     if (college) {
-      // Extract state from college location
-      const [state] = college.location.split(', ');
+      // Extract state from college location and use it as city too
+      const state = college.location.split(', ')[0];
+      const city = state; // Using state as city since we don't have city
       setSelectedState(state);
-      setSelectedCity(college.city);
-      loadCostData(college.city, state);
+      setSelectedCity(city);
+      loadCostData(city, state);
     }
   };
   

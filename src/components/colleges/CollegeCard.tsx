@@ -53,6 +53,11 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
     return progressColors.low;
   };
   
+  // Extract city and location from college.location
+  const location = college.location;
+  // Default to the first part of location if available, otherwise empty string
+  const city = college.location.split(', ')[0] || '';
+  
   return (
     <Card className={`transition-all duration-300 ${expanded ? 'shadow-lg' : 'hover:shadow-md'}`}>
       <CardHeader className="pb-2">
@@ -61,7 +66,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
             <CardTitle className="text-xl font-bold">{college.name}</CardTitle>
             <CardDescription className="flex items-center gap-1 mt-1">
               <MapPin className="h-3 w-3" />
-              <span>{college.city}, {college.location}</span>
+              <span>{city}, {location}</span>
             </CardDescription>
           </div>
           <PercentageMatch value={matchPercentage} />
@@ -72,12 +77,12 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline" className="flex gap-1 items-center">
             <GraduationCap className="h-3 w-3" />
-            {college.acceptance}% Acceptance
+            {college.acceptanceRate * 100}% Acceptance
           </Badge>
           
           <Badge variant="outline" className="flex gap-1 items-center">
             <Users className="h-3 w-3" />
-            {college.undergraduate.toLocaleString()} Students
+            {college.studentPopulation.toLocaleString()} Students
           </Badge>
           
           <Badge variant="outline" className="flex gap-1 items-center">

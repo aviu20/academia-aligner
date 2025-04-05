@@ -79,83 +79,88 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {savedColleges.map(({ college, matchPercentage }) => (
-                <Card key={college.id} className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full"
-                    onClick={() => onRemove(college.id, 'saved')}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  
-                  <CardHeader className={`pb-2 ${isMobile ? 'pr-8' : ''}`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-xl">{college.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{college.city}, {college.location}</span>
-                        </p>
+              {savedColleges.map(({ college, matchPercentage }) => {
+                // Extract city from location
+                const city = college.location.split(', ')[0] || '';
+                
+                return (
+                  <Card key={college.id} className="relative">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full"
+                      onClick={() => onRemove(college.id, 'saved')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    
+                    <CardHeader className={`pb-2 ${isMobile ? 'pr-8' : ''}`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-xl">{college.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{city}, {college.location}</span>
+                          </p>
+                        </div>
+                        
+                        <PercentageMatch value={matchPercentage} />
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Badge variant="outline" className="flex gap-1 items-center">
+                          <GraduationCap className="h-3 w-3" />
+                          {college.acceptanceRate * 100}% Acceptance
+                        </Badge>
+                        
+                        <Badge variant="outline" className="flex gap-1 items-center">
+                          <Users className="h-3 w-3" />
+                          {college.studentPopulation.toLocaleString()} Students
+                        </Badge>
+                        
+                        <Badge variant="outline" className="flex gap-1 items-center">
+                          <DollarSign className="h-3 w-3" />
+                          ${Math.round(college.tuition / 1000)}k/yr
+                        </Badge>
+                        
+                        {isInternational && college.internationalScholarships && (
+                          <Badge className="bg-green-600 text-white hover:bg-green-700 flex gap-1 items-center">
+                            <Globe className="h-3 w-3" />
+                            Int'l Scholarships
+                          </Badge>
+                        )}
                       </div>
                       
-                      <PercentageMatch value={matchPercentage} />
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="flex gap-1 items-center">
-                        <GraduationCap className="h-3 w-3" />
-                        {college.acceptance}% Acceptance
-                      </Badge>
-                      
-                      <Badge variant="outline" className="flex gap-1 items-center">
-                        <Users className="h-3 w-3" />
-                        {college.undergraduate.toLocaleString()} Students
-                      </Badge>
-                      
-                      <Badge variant="outline" className="flex gap-1 items-center">
-                        <DollarSign className="h-3 w-3" />
-                        ${Math.round(college.tuition / 1000)}k/yr
-                      </Badge>
-                      
-                      {isInternational && college.internationalScholarships && (
-                        <Badge className="bg-green-600 text-white hover:bg-green-700 flex gap-1 items-center">
-                          <Globe className="h-3 w-3" />
-                          Int'l Scholarships
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        onClick={() => {
-                          document.querySelector('[data-value="journey"]')?.dispatchEvent(
-                            new MouseEvent('click', { bubbles: true })
-                          );
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        View Application Steps
-                      </Button>
-                      
-                      {onViewCostOfLiving && (
-                        <Button 
-                          onClick={() => onViewCostOfLiving(college.id)}
-                          variant="outline" 
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => {
+                            document.querySelector('[data-value="journey"]')?.dispatchEvent(
+                              new MouseEvent('click', { bubbles: true })
+                            );
+                          }}
+                          variant="outline"
                           size="sm"
                         >
-                          <Calculator className="h-4 w-4 mr-1" />
-                          Cost of Living
+                          View Application Steps
                         </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        
+                        {onViewCostOfLiving && (
+                          <Button 
+                            onClick={() => onViewCostOfLiving(college.id)}
+                            variant="outline" 
+                            size="sm"
+                          >
+                            <Calculator className="h-4 w-4 mr-1" />
+                            Cost of Living
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
@@ -167,46 +172,51 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {rejectedColleges.map(({ college, matchPercentage }) => (
-                <Card key={college.id} className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full"
-                    onClick={() => onRemove(college.id, 'rejected')}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  
-                  <CardHeader className={`pb-2 ${isMobile ? 'pr-8' : ''}`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-xl">{college.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{college.city}, {college.location}</span>
-                        </p>
+              {rejectedColleges.map(({ college, matchPercentage }) => {
+                // Extract city from location
+                const city = college.location.split(', ')[0] || '';
+                
+                return (
+                  <Card key={college.id} className="relative">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full"
+                      onClick={() => onRemove(college.id, 'rejected')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    
+                    <CardHeader className={`pb-2 ${isMobile ? 'pr-8' : ''}`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-xl">{college.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{city}, {college.location}</span>
+                          </p>
+                        </div>
+                        
+                        <PercentageMatch value={matchPercentage} />
                       </div>
-                      
-                      <PercentageMatch value={matchPercentage} />
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="flex gap-1 items-center">
-                        <GraduationCap className="h-3 w-3" />
-                        {college.acceptance}% Acceptance
-                      </Badge>
-                      
-                      <Badge variant="outline" className="flex gap-1 items-center">
-                        <DollarSign className="h-3 w-3" />
-                        ${Math.round(college.tuition / 1000)}k/yr
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="flex gap-1 items-center">
+                          <GraduationCap className="h-3 w-3" />
+                          {college.acceptanceRate * 100}% Acceptance
+                        </Badge>
+                        
+                        <Badge variant="outline" className="flex gap-1 items-center">
+                          <DollarSign className="h-3 w-3" />
+                          ${Math.round(college.tuition / 1000)}k/yr
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
