@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import CollegeCard from './CollegeCard';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SwipeableCollegeStack from './SwipeableCollegeStack';
 import CollegeSavedList from './CollegeSavedList';
 import { useIsMobile } from '@/hooks/use-mobile';
+import JourneyTabs from '../journey/JourneyTabs';
 
 const CollegeList: React.FC = () => {
   const { profile } = useUserProfile();
@@ -39,7 +41,7 @@ const CollegeList: React.FC = () => {
     const nameMatch = match.college.name.toLowerCase().includes(searchTerm.toLowerCase());
     const locationMatch = filterLocation === 'all' ? true : match.college.location === filterLocation;
     const scholarshipMatch = filterScholarship === 'all' ? true : 
-                           (filterScholarship === 'yes' ? match.college.internationalScholarships : !match.college.internationalScholarships);
+                            (filterScholarship === 'yes' ? match.college.internationalScholarships : !match.college.internationalScholarships);
     
     return nameMatch && locationMatch && scholarshipMatch;
   });
@@ -69,7 +71,7 @@ const CollegeList: React.FC = () => {
         <TabsList className="w-full mb-6">
           <TabsTrigger value="discover" className="flex-1">Discover</TabsTrigger>
           <TabsTrigger value="saved" className="flex-1">My Colleges</TabsTrigger>
-          <TabsTrigger value="tracker" className="flex-1">Application Tracker</TabsTrigger>
+          <TabsTrigger value="journey" className="flex-1">Application Journey</TabsTrigger>
         </TabsList>
         
         <TabsContent value="discover" className="mt-0">
@@ -188,91 +190,10 @@ const CollegeList: React.FC = () => {
           />
         </TabsContent>
         
-        <TabsContent value="tracker" className="mt-0">
-          <div className="text-center py-8">
-            <h3 className="text-xl font-medium mb-2">Application Tracker</h3>
-            <p className="mb-4">Track your application progress for each college</p>
-            
-            {getSavedCollegeMatches().length > 0 ? (
-              <div className="grid gap-4">
-                {getSavedCollegeMatches().map(match => (
-                  <ApplicationTrackerCard 
-                    key={match.college.id} 
-                    college={match.college} 
-                    matchPercentage={match.matchPercentage}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-8 border rounded-lg">
-                <p className="mb-4">You haven't saved any colleges yet</p>
-                <Button variant="outline" onClick={() => {
-                  document.querySelector('[data-value="discover"]')?.dispatchEvent(
-                    new MouseEvent('click', { bubbles: true })
-                  );
-                }}>
-                  Go discover colleges
-                </Button>
-              </div>
-            )}
-          </div>
+        <TabsContent value="journey" className="mt-0">
+          <JourneyTabs savedColleges={getSavedCollegeMatches()} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
-
-const ApplicationTrackerCard: React.FC<{
-  college: typeof colleges[0];
-  matchPercentage: number;
-}> = ({ college, matchPercentage }) => {
-  const [status, setStatus] = useState<'not-started' | 'in-progress' | 'submitted' | 'accepted' | 'rejected'>('not-started');
-  
-  const getStatusColor = () => {
-    switch (status) {
-      case 'accepted': return 'bg-green-100 text-green-800 border-green-300';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-300';
-      case 'submitted': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-  
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <h4 className="font-medium">{college.name}</h4>
-          <p className="text-sm text-muted-foreground">{college.location}</p>
-        </div>
-        <div className="text-sm font-medium">{Math.round(matchPercentage)}% Match</div>
-      </div>
-      
-      <div className="flex gap-2 mt-3">
-        <Select value={status} onValueChange={(value: any) => setStatus(value)}>
-          <SelectTrigger className={`text-xs h-8 ${getStatusColor()}`}>
-            <SelectValue placeholder="Set status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="not-started">Not Started</SelectItem>
-            <SelectItem value="in-progress">In Progress</SelectItem>
-            <SelectItem value="submitted">Submitted</SelectItem>
-            <SelectItem value="accepted">Accepted</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <Button variant="outline" size="sm" className="h-8">
-          <a 
-            href={`https://${college.name.toLowerCase().replace(/\s+/g, '')}.edu/admissions`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-xs"
-          >
-            Apply
-          </a>
-        </Button>
-      </div>
     </div>
   );
 };
