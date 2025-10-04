@@ -16,6 +16,7 @@ interface SwipeableCollegeStackProps {
     matchReasons: string[];
     cautionPoints: string[];
     admissionFit?: any;
+    percentiles?: any;
     scores?: {
       academicScore: number;
       majorScore: number;
@@ -125,6 +126,7 @@ const SwipeableCollegeStack: React.FC<SwipeableCollegeStackProps> = ({
               isInternational={isInternational}
               initialExpanded={true} // Always initially expanded in the dialog
               admissionFit={currentMatch.admissionFit}
+              percentiles={currentMatch.percentiles}
               matchBreakdown={{
                 academic: Math.round(currentMatch.scores?.academicScore * 100) || 75,
                 major: Math.round(currentMatch.scores?.majorScore * 100) || 80,

@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Check, AlertTriangle, ChevronDown, ChevronUp, DollarSign, GraduationCap, MapPin, Users, BookOpen, Award, Globe, Calculator } from 'lucide-react';
 import PercentageMatch from '../ui-custom/PercentageMatch';
 import AcademicMatchBreakdown from './AcademicMatchBreakdown';
-import { AdmissionFitResult } from '@/utils/admissionStats';
+import { AdmissionFitResult, AdmissionPercentiles } from '@/utils/admissionStats';
 
 interface CollegeCardProps {
   college: College;
@@ -18,6 +18,7 @@ interface CollegeCardProps {
   isInternational: boolean;
   initialExpanded?: boolean;
   admissionFit?: AdmissionFitResult;
+  percentiles?: AdmissionPercentiles;
   matchBreakdown: {
     academic: number;
     major: number;
@@ -38,6 +39,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   isInternational,
   initialExpanded = false,
   admissionFit,
+  percentiles,
   matchBreakdown,
   onViewCostOfLiving
 }) => {
@@ -64,18 +66,46 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   // Default to the first part of location if available, otherwise empty string
   const city = college.location.split(', ')[0] || '';
   
+  // Get driving factor for match
+  const getDrivingFactor = () => {
+    if (!admissionFit) return null;
+    
+    const factor = admissionFit.weakestFactor;
+    const status = factor === 'GPA' ? admissionFit.gpa.status : 
+                   factor === 'SAT' ? admissionFit.sat.status : 
+                   admissionFit.act.status;
+    
+    if (status === 'reach') {
+      return (
+        <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200 ml-2">
+          {factor} is reach
+        </Badge>
+      );
+    } else if (status === 'strong') {
+      return (
+        <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200 ml-2">
+          Strong {factor}
+        </Badge>
+      );
+    }
+    return null;
+  };
+  
   return (
     <Card className={`transition-all duration-300 ${expanded ? 'shadow-lg' : 'hover:shadow-md'}`}>
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
             <CardTitle className="text-xl font-bold">{college.name}</CardTitle>
             <CardDescription className="flex items-center gap-1 mt-1">
               <MapPin className="h-3 w-3" />
               <span>{city}, {location}</span>
             </CardDescription>
           </div>
-          <PercentageMatch percentage={matchPercentage} />
+          <div className="flex flex-col items-end gap-1">
+            <PercentageMatch percentage={matchPercentage} />
+            {getDrivingFactor()}
+          </div>
         </div>
       </CardHeader>
       
@@ -132,9 +162,9 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
               </div>
             )}
             
-            {admissionFit && (
+            {admissionFit && percentiles && (
               <div className="mt-6">
-                <AcademicMatchBreakdown admissionFit={admissionFit} />
+                <AcademicMatchBreakdown admissionFit={admissionFit} percentiles={percentiles} />
               </div>
             )}
             

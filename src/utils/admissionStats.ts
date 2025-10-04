@@ -27,14 +27,22 @@ export interface AdmissionFitResult {
     percentageAdmitted: number;
     status: 'strong' | 'competitive' | 'reach';
   };
-  testScore: {
-    type: 'SAT' | 'ACT';
+  sat: {
     userValue: number;
     collegeMid: number;
     percentileBucket: '75+' | '50-75' | '25-50' | '<25';
     percentageAdmitted: number;
     status: 'strong' | 'competitive' | 'reach';
   };
+  act: {
+    userValue: number;
+    collegeMid: number;
+    percentileBucket: '75+' | '50-75' | '25-50' | '<25';
+    percentageAdmitted: number;
+    status: 'strong' | 'competitive' | 'reach';
+  };
+  weakestFactor: 'GPA' | 'SAT' | 'ACT';
+  strongestFactor: 'GPA' | 'SAT' | 'ACT';
 }
 
 /**
@@ -82,7 +90,7 @@ export function calculateAdmissionFit(
     percentiles.gpa.percentile75
   );
   
-  // Determine which test to use (higher percentile)
+  // Calculate SAT fit
   const satFit = calculateScoreFit(
     userProfile.satScore,
     percentiles.sat.percentile25,
@@ -90,6 +98,7 @@ export function calculateAdmissionFit(
     percentiles.sat.percentile75
   );
   
+  // Calculate ACT fit
   const actFit = calculateScoreFit(
     userProfile.actScore,
     percentiles.act.percentile25,
@@ -97,9 +106,16 @@ export function calculateAdmissionFit(
     percentiles.act.percentile75
   );
   
-  // Use the better test score
-  const useSAT = satFit.rank >= actFit.rank;
-  const testFit = useSAT ? satFit : actFit;
+  // Determine weakest and strongest factors
+  const factors = [
+    { name: 'GPA' as const, rank: gpaFit.rank },
+    { name: 'SAT' as const, rank: satFit.rank },
+    { name: 'ACT' as const, rank: actFit.rank }
+  ];
+  
+  factors.sort((a, b) => a.rank - b.rank);
+  const weakestFactor = factors[0].name;
+  const strongestFactor = factors[2].name;
   
   return {
     gpa: {
@@ -109,14 +125,22 @@ export function calculateAdmissionFit(
       percentageAdmitted: gpaFit.percentageAdmitted,
       status: gpaFit.status
     },
-    testScore: {
-      type: useSAT ? 'SAT' : 'ACT',
-      userValue: useSAT ? userProfile.satScore : userProfile.actScore,
-      collegeMid: useSAT ? percentiles.sat.percentile50 : percentiles.act.percentile50,
-      percentileBucket: testFit.bucket,
-      percentageAdmitted: testFit.percentageAdmitted,
-      status: testFit.status
-    }
+    sat: {
+      userValue: userProfile.satScore,
+      collegeMid: percentiles.sat.percentile50,
+      percentileBucket: satFit.bucket,
+      percentageAdmitted: satFit.percentageAdmitted,
+      status: satFit.status
+    },
+    act: {
+      userValue: userProfile.actScore,
+      collegeMid: percentiles.act.percentile50,
+      percentileBucket: actFit.bucket,
+      percentageAdmitted: actFit.percentageAdmitted,
+      status: actFit.status
+    },
+    weakestFactor,
+    strongestFactor
   };
 }
 

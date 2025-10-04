@@ -16,6 +16,7 @@ interface CollegeSavedListProps {
     matchReasons?: string[];
     cautionPoints?: string[];
     admissionFit?: any;
+    percentiles?: any;
     scores?: any;
   }>;
   rejectedColleges: Array<{
@@ -24,6 +25,7 @@ interface CollegeSavedListProps {
     matchReasons?: string[];
     cautionPoints?: string[];
     admissionFit?: any;
+    percentiles?: any;
     scores?: any;
   }>;
   isInternational: boolean;
