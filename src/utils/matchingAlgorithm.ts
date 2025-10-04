@@ -1,11 +1,13 @@
 import { UserProfile } from '../data/userData';
 import { College } from '../data/collegeData';
+import { calculateAdmissionFit, type AdmissionFitResult } from './admissionStats';
 
 interface CollegeMatch {
   college: College;
   matchPercentage: number;
   matchReasons: string[];
   cautionPoints: string[];
+  admissionFit?: AdmissionFitResult;
   scores?: {
     academicScore: number;
     majorScore: number;
@@ -179,6 +181,8 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
     
     const matchPercentage = Math.round(Math.min(totalScore * 100, 100));
     
+    const admissionFit = calculateAdmissionFit(userProfile, college);
+    
     const scores = {
       gpaScore: gpaScore / gpaImportance,
       testScore: testScore / testScoreImportance,
@@ -213,6 +217,7 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
       matchPercentage,
       matchReasons,
       cautionPoints,
+      admissionFit,
       scores
     };
   }).sort((a, b) => b.matchPercentage - a.matchPercentage);

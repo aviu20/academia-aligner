@@ -13,10 +13,18 @@ interface CollegeSavedListProps {
   savedColleges: Array<{
     college: College;
     matchPercentage: number;
+    matchReasons?: string[];
+    cautionPoints?: string[];
+    admissionFit?: any;
+    scores?: any;
   }>;
   rejectedColleges: Array<{
     college: College;
     matchPercentage: number;
+    matchReasons?: string[];
+    cautionPoints?: string[];
+    admissionFit?: any;
+    scores?: any;
   }>;
   isInternational: boolean;
   onRemove: (collegeId: string, list: 'saved' | 'rejected') => void;
@@ -79,7 +87,8 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {savedColleges.map(({ college, matchPercentage }) => {
+              {savedColleges.map((match) => {
+                const { college, matchPercentage, matchReasons = [], cautionPoints = [], admissionFit, scores } = match;
                 // Extract city from location
                 const city = college.location.split(', ')[0] || '';
                 
@@ -173,7 +182,8 @@ const CollegeSavedList: React.FC<CollegeSavedListProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {rejectedColleges.map(({ college, matchPercentage }) => {
+              {rejectedColleges.map((match) => {
+                const { college, matchPercentage } = match;
                 // Extract city from location
                 const city = college.location.split(', ')[0] || '';
                 

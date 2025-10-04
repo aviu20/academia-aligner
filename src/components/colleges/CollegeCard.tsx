@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Check, AlertTriangle, ChevronDown, ChevronUp, DollarSign, GraduationCap, MapPin, Users, BookOpen, Award, Globe, Calculator } from 'lucide-react';
 import PercentageMatch from '../ui-custom/PercentageMatch';
+import AcademicMatchBreakdown from './AcademicMatchBreakdown';
+import { AdmissionFitResult } from '@/utils/admissionStats';
 
 interface CollegeCardProps {
   college: College;
@@ -15,6 +17,7 @@ interface CollegeCardProps {
   cautionPoints: string[];
   isInternational: boolean;
   initialExpanded?: boolean;
+  admissionFit?: AdmissionFitResult;
   matchBreakdown: {
     academic: number;
     major: number;
@@ -34,6 +37,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   cautionPoints, 
   isInternational,
   initialExpanded = false,
+  admissionFit,
   matchBreakdown,
   onViewCostOfLiving
 }) => {
@@ -125,6 +129,12 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+            
+            {admissionFit && (
+              <div className="mt-6">
+                <AcademicMatchBreakdown admissionFit={admissionFit} />
               </div>
             )}
             
