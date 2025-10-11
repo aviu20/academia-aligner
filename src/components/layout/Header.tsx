@@ -23,6 +23,7 @@ const Header: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-8">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/results">Matches</NavLink>
+          <NavLink to="/cost-calculator">Cost Calculator</NavLink>
           
           <div className="space-x-2">
             {isAuthenticated ? (
