@@ -6,7 +6,8 @@ import {
   getCityByLocation, 
   calculateConvertedCost,
   currencySymbols,
-  CostBreakdown
+  CostBreakdown,
+  getCityByCollegeId
 } from '@/data/costOfLivingData';
 import { colleges } from '@/data/collegeData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,24 +41,21 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
   // Set initial college if provided
   useEffect(() => {
     if (collegeId) {
-      const college = colleges.find(c => c.id === collegeId);
-      if (college) {
-        setSelectedCollegeId(collegeId);
-        // Extract city and state from college location
-        const locationParts = college.location.split(', ');
-        const state = locationParts[0]; // First part is the state (e.g., "West Coast")
-        // For city, we'll use the state as a default since college doesn't have city
-        const city = state;
-        setSelectedState(state);
-        setSelectedCity(city);
-        loadCostData(city, state);
-      }
+      setSelectedCollegeId(collegeId);
+      loadCostDataByCollegeId(collegeId);
     }
   }, [collegeId]);
   
-  // Load cost data when city/state changes
-  const loadCostData = (city: string, state: string) => {
-    const cityData = getCityByLocation(city, state);
+  // Update when currency changes
+  useEffect(() => {
+    if (selectedCollegeId) {
+      loadCostDataByCollegeId(selectedCollegeId);
+    }
+  }, [currency]);
+  
+  // Load cost data by college ID
+  const loadCostDataByCollegeId = (collegeId: string) => {
+    const cityData = getCityByCollegeId(collegeId);
     
     if (cityData) {
       // Get costs in selected currency
@@ -72,62 +70,31 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
       setSelectedState(cityData.state);
       setSelectedCountry(cityData.country);
     } else {
-      // If no exact match, use approximate data from the same state
-      const stateMatch = costOfLivingData.find(data => 
-        data.state.toLowerCase() === state.toLowerCase()
+      // Default to first entry if no mapping exists
+      const defaultCity = costOfLivingData[0];
+      const convertedCosts = calculateConvertedCost(
+        defaultCity.costs,
+        defaultCity.currencyCode,
+        currency
       );
       
-      if (stateMatch) {
-        const convertedCosts = calculateConvertedCost(
-          stateMatch.costs,
-          stateMatch.currencyCode,
-          currency
-        );
-        
-        setCosts(convertedCosts);
-        setSelectedCity(city); // Keep the requested city name
-        setSelectedState(state);
-        setSelectedCountry(stateMatch.country);
-      } else {
-        // Default to first entry if no match
-        const defaultCity = costOfLivingData[0];
-        const convertedCosts = calculateConvertedCost(
-          defaultCity.costs,
-          defaultCity.currencyCode,
-          currency
-        );
-        
-        setCosts(convertedCosts);
-        setSelectedCity(defaultCity.city);
-        setSelectedState(defaultCity.state);
-        setSelectedCountry(defaultCity.country);
-      }
+      setCosts(convertedCosts);
+      setSelectedCity(defaultCity.city);
+      setSelectedState(defaultCity.state);
+      setSelectedCountry(defaultCity.country);
     }
   };
   
   // Handle college selection change
   const handleCollegeChange = (collegeId: string) => {
     setSelectedCollegeId(collegeId);
-    const college = colleges.find(c => c.id === collegeId);
-    
-    if (college) {
-      // Extract state from college location and use it as city too
-      const state = college.location.split(', ')[0];
-      const city = state; // Using state as city since we don't have city
-      setSelectedState(state);
-      setSelectedCity(city);
-      loadCostData(city, state);
-    }
+    loadCostDataByCollegeId(collegeId);
   };
   
   // Handle currency change
   const handleCurrencyChange = (newCurrency: string) => {
     setCurrency(newCurrency);
     setCurrencySymbol(currencySymbols[newCurrency as keyof typeof currencySymbols] || '$');
-    
-    if (selectedCity && selectedState) {
-      loadCostData(selectedCity, selectedState);
-    }
   };
   
   // Prepare data for pie chart
@@ -223,7 +190,8 @@ const CostOfLivingCalculator: React.FC<CostOfLivingCalculatorProps> = ({ college
               <label className="text-sm font-medium mb-1 block">Calculate</label>
               <Button 
                 className="w-full transitions-all"
-                onClick={() => loadCostData(selectedCity, selectedState)}
+                onClick={() => selectedCollegeId && loadCostDataByCollegeId(selectedCollegeId)}
+                disabled={!selectedCollegeId}
               >
                 Calculate Costs
               </Button>

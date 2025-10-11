@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Check, AlertTriangle, ChevronDown, ChevronUp, DollarSign, GraduationCap, MapPin, Users, BookOpen, Award, Globe, Calculator } from 'lucide-react';
+import { Check, AlertTriangle, ChevronDown, ChevronUp, DollarSign, GraduationCap, MapPin, Users, BookOpen, Award, Globe, Calculator, X } from 'lucide-react';
 import PercentageMatch from '../ui-custom/PercentageMatch';
 import AcademicMatchBreakdown from './AcademicMatchBreakdown';
 import { AdmissionFitResult, AdmissionPercentiles } from '@/utils/admissionStats';
@@ -29,6 +29,9 @@ interface CollegeCardProps {
     international?: number;
   };
   onViewCostOfLiving?: (collegeId: string) => void;
+  onSave?: () => void;
+  onReject?: () => void;
+  showActions?: boolean;
 }
 
 const CollegeCard: React.FC<CollegeCardProps> = ({ 
@@ -41,7 +44,10 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   admissionFit,
   percentiles,
   matchBreakdown,
-  onViewCostOfLiving
+  onViewCostOfLiving,
+  onSave,
+  onReject,
+  showActions = false
 }) => {
   const [expanded, setExpanded] = useState(initialExpanded);
   
@@ -257,6 +263,29 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
       </CardContent>
       
       <CardFooter className="flex flex-col md:flex-row gap-2">
+        {showActions && (
+          <div className="flex gap-2 w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 md:flex-none border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={onReject}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Skip
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 md:flex-none border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+              onClick={onSave}
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Save
+            </Button>
+          </div>
+        )}
+        
         {!initialExpanded && (
           <Button 
             variant="outline" 

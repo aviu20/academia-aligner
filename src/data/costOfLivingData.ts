@@ -195,3 +195,19 @@ export function calculateConvertedCost(
     misc: Math.round(costs.misc * conversionRate)
   };
 }
+
+// Map college IDs to cities
+export const collegeIdToCityMap: Record<string, string> = {
+  '1': '1',  // Stanford -> Palo Alto
+  '2': '2',  // MIT -> Cambridge
+  '3': '5',  // Berkeley -> Berkeley
+  '4': '2',  // Harvard -> Cambridge
+  '6': '3',  // Michigan -> Ann Arbor
+  '15': '6', // Duke -> Durham
+  // Add more mappings as needed
+};
+
+export function getCityByCollegeId(collegeId: string): CityLivingCost | undefined {
+  const cityId = collegeIdToCityMap[collegeId];
+  return cityId ? getCityById(cityId) : undefined;
+}

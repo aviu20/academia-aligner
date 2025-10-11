@@ -172,6 +172,9 @@ const CollegeList: React.FC = () => {
                             (Math.round(match.scores?.internationalScore * 100) || 80) : undefined
                         }}
                         onViewCostOfLiving={() => handleViewCostOfLivingFromCollege(match.college.id)}
+                        showActions={true}
+                        onSave={() => handleSwipe(match.college, 'right')}
+                        onReject={() => handleSwipe(match.college, 'left')}
                       />
                     ))}
                   </>
