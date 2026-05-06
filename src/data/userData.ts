@@ -7,7 +7,7 @@ export interface UserProfile {
   actScore: number;
   intendedMajor: string;
   academicRigorScore: number;
-  classRank: number;
+  classRank: number; // percentile 0-100, higher = better (90 = top 10%)
   preferredLocation: string;
   maxTuition: number;
   interestsInDormLife: boolean;
@@ -19,6 +19,8 @@ export interface UserProfile {
   sportsImportance: number;
   researchOpportunitiesImportance: number;
   essayQuality: number;
+  isFirstGeneration: boolean;
+  demonstratedInterest: number; // 1-5: how much effort put into showing interest
   isInternationalStudent: boolean;
   country?: string;
   englishProficiency: {
@@ -52,6 +54,8 @@ const initialProfile: UserProfile = {
   sportsImportance: 3,
   researchOpportunitiesImportance: 4,
   essayQuality: 4,
+  isFirstGeneration: false,
+  demonstratedInterest: 3,
   isInternationalStudent: false,
   country: undefined,
   englishProficiency: {

@@ -40,157 +40,195 @@ interface CollegeWeights {
   volunteerWork: number;
   workExperience: number;
   character: number;
+  firstGeneration: number;
+  demonstratedInterest: number;
   international?: number;
 }
 
-const IMPORTANCE_WEIGHTS = {
-  veryImportant: 0.4,
-  important: 0.3,
-  considered: 0.2,
-  notConsidered: 0
-};
+/**
+ * Sigmoid-based academic fit score.
+ * Returns ~0.75 when the student matches the college average, higher when above,
+ * lower when below. The scale parameter controls how quickly the score drops off
+ * — it represents a "one standard deviation equivalent" gap for that metric.
+ */
+function sigmoidFit(userValue: number, collegeAvg: number, scale: number): number {
+  const gap = (collegeAvg - userValue) / scale;
+  return 1 / (1 + Math.exp(gap - 1.1));
+}
 
 function getWeightsForCollege(college: College, isInternational: boolean): CollegeWeights {
-  const totalImportance = Object.values(college.admissionFactors).reduce((sum, val) => sum + val, 0);
-  
-  const baseWeights: CollegeWeights = {
-    academics: (college.admissionFactors.academicRigor + 
-                college.admissionFactors.academicGPA + 
-                college.admissionFactors.standardizedTests) / (totalImportance * 3),
-    major: 0.1,
-    location: college.admissionFactors.geographicResidence / totalImportance,
-    financials: 0.1,
-    lifestyle: 0.05,
-    extracurricular: college.admissionFactors.extracurricular / totalImportance,
-    essay: college.admissionFactors.applicationEssay / totalImportance,
-    recommendation: college.admissionFactors.recommendation / totalImportance,
-    specialTalent: college.admissionFactors.talentAbility / totalImportance,
-    volunteerWork: college.admissionFactors.volunteerWork / totalImportance,
-    workExperience: college.admissionFactors.workExperience / totalImportance,
-    character: college.admissionFactors.characterPersonal / totalImportance,
+  const af = college.admissionFactors;
+
+  // Raw weights derived directly from the college's stated admission factor
+  // importance (0-5 scale). Factors not in the admissionFactors schema get a
+  // reasonable fixed base. We normalize to sum to 1 at the end.
+  const raw: CollegeWeights = {
+    academics: af.academicGPA + af.standardizedTests + af.academicRigor + af.classRank,
+    major: 3,
+    location: Math.max(af.geographicResidence, 1),
+    financials: 3,
+    lifestyle: 2,
+    extracurricular: af.extracurricular,
+    essay: af.applicationEssay,
+    recommendation: af.recommendation,
+    specialTalent: af.talentAbility,
+    volunteerWork: af.volunteerWork,
+    workExperience: af.workExperience,
+    character: af.characterPersonal,
+    firstGeneration: af.firstGeneration,
+    demonstratedInterest: af.demonstratedInterest,
   };
-  
+
   if (isInternational) {
-    return {
-      ...baseWeights,
-      international: 0.15,
-      academics: baseWeights.academics * 0.9,
-      lifestyle: baseWeights.lifestyle * 0.8,
-    };
+    raw.international = 4;
   }
-  
-  return baseWeights;
+
+  // Normalize so all weights sum to 1
+  const sum = Object.values(raw).reduce((s, v) => s + (v ?? 0), 0);
+  const normalized: CollegeWeights = {} as CollegeWeights;
+  for (const [key, value] of Object.entries(raw)) {
+    (normalized as Record<string, number>)[key] = (value ?? 0) / sum;
+  }
+
+  return normalized;
 }
 
 export function calculateCollegeMatches(userProfile: UserProfile, colleges: College[]): CollegeMatch[] {
   return colleges.map(college => {
     const weights = getWeightsForCollege(college, userProfile.isInternationalStudent);
-    
-    const gpaImportance = Math.min(college.admissionFactors.academicGPA / 5, 1) * IMPORTANCE_WEIGHTS.veryImportant;
-    const testScoreImportance = Math.min(college.admissionFactors.standardizedTests / 5, 1) * IMPORTANCE_WEIGHTS.important;
-    
-    const gpaScore = calculateGpaMatch(userProfile.gpa, college.averageGPA) * gpaImportance;
-    const satScore = calculateSatMatch(userProfile.satScore, college.averageSAT) * testScoreImportance;
-    const actScore = calculateActMatch(userProfile.actScore, college.averageACT) * testScoreImportance;
-    
+
+    // --- Academic scores using sigmoid fit ---
+    // Scale parameters represent "one meaningful gap" for each metric
+    const af = college.admissionFactors;
+    const gpaScore = sigmoidFit(userProfile.gpa, college.averageGPA, 0.3);
+    const satScore = userProfile.satScore > 0
+      ? sigmoidFit(userProfile.satScore, college.testScores.sat50, 100)
+      : 0.5;
+    const actScore = userProfile.actScore > 0
+      ? sigmoidFit(userProfile.actScore, college.testScores.act50, 3)
+      : 0.5;
     const testScore = Math.max(satScore, actScore);
-    
-    const academicScore = (
-      gpaScore / gpaImportance + 
-      testScore / testScoreImportance
-    ) / (gpaImportance > 0 && testScoreImportance > 0 ? 2 : (gpaImportance > 0 || testScoreImportance > 0 ? 1 : 1));
-    
+
+    const academicRigorScore = normalize(userProfile.academicRigorScore, 1, 5) *
+                               normalize(af.academicRigor, 0, 5);
+
+    const classRankScore = userProfile.classRank > 0
+      ? userProfile.classRank / 100
+      : 0.5;
+
+    // Combined academic score: sub-weighted average of GPA, tests, rigor, rank
+    // using the college's own importance ratings as sub-weights
+    const acadSubTotal = af.academicGPA + af.standardizedTests + af.academicRigor + af.classRank;
+    const academicScore = acadSubTotal > 0
+      ? (gpaScore * af.academicGPA +
+         testScore * af.standardizedTests +
+         academicRigorScore * af.academicRigor +
+         classRankScore * af.classRank) / acadSubTotal
+      : (gpaScore + testScore) / 2;
+
+    // --- Non-academic dimension scores (all in [0, 1]) ---
     const majorScore = calculateMajorMatch(userProfile.intendedMajor, college.strongMajors);
+
     const locationScore = userProfile.preferredLocation === college.location ? 1.0 : 0.5;
-    const financialScore = userProfile.maxTuition >= college.tuition ? 
-      1.0 : 1.0 - ((college.tuition - userProfile.maxTuition) / college.tuition);
-    
+
+    // Financial fit: sigmoid around the tuition so it degrades smoothly
+    const financialScore = userProfile.maxTuition >= college.tuition
+      ? 1.0
+      : Math.max(0, sigmoidFit(userProfile.maxTuition, college.tuition, college.tuition * 0.3));
+
     const sportsScore = calculatePreferenceMatch(
-      userProfile.sportsImportance, 
+      userProfile.sportsImportance,
       college.sportsRanking
     );
-    
     const researchScore = calculatePreferenceMatch(
       userProfile.researchOpportunitiesImportance,
       college.researchOpportunities
     );
-    
-    const dormLifeScore = userProfile.interestsInDormLife ? 
-      normalize(college.dormLifeQuality, 1, 5) : 0.5;
-    
+    const dormLifeScore = userProfile.interestsInDormLife
+      ? normalize(college.dormLifeQuality, 1, 5)
+      : 0.5;
     const lifestyleScore = (sportsScore + researchScore + dormLifeScore) / 3;
-    
-    const academicRigorScore = normalize(userProfile.academicRigorScore, 1, 5) * 
-                              normalize(college.admissionFactors.academicRigor, 0, 5);
-    
-    const classRankScore = userProfile.classRank ? 
-                           (userProfile.classRank / 100) * normalize(college.admissionFactors.classRank, 0, 5) : 0.5;
-    
-    const essayScore = normalize(userProfile.essayQuality, 1, 5) * 
-                       normalize(college.admissionFactors.applicationEssay, 0, 5);
-    
-    const recommendationScore = userProfile.hasRecommendationLetters ? 
-                               normalize(college.admissionFactors.recommendation, 0, 5) : 0.3;
-    
-    const extracurricularScore = userProfile.hasSignificantExtracurriculars ? 
-                                normalize(college.admissionFactors.extracurricular, 0, 5) : 0.3;
-    
-    const talentScore = userProfile.hasSpecialTalent ? 
-                       normalize(college.admissionFactors.talentAbility, 0, 5) : 0.3;
-    
-    const volunteerScore = userProfile.hasVolunteerExperience ? 
-                          normalize(college.admissionFactors.volunteerWork, 0, 5) : 0.3;
-    
-    const workExperienceScore = userProfile.hasWorkExperience ? 
-                               normalize(college.admissionFactors.workExperience, 0, 5) : 0.3;
-    
+
+    const essayScore = normalize(userProfile.essayQuality, 1, 5) *
+                       normalize(af.applicationEssay, 0, 5);
+
+    const recommendationScore = userProfile.hasRecommendationLetters
+      ? normalize(college.admissionFactors.recommendation, 0, 5)
+      : 0.3;
+
+    const extracurricularScore = userProfile.hasSignificantExtracurriculars
+      ? normalize(college.admissionFactors.extracurricular, 0, 5)
+      : 0.3;
+
+    const talentScore = userProfile.hasSpecialTalent
+      ? normalize(college.admissionFactors.talentAbility, 0, 5)
+      : 0.3;
+
+    const volunteerScore = userProfile.hasVolunteerExperience
+      ? normalize(college.admissionFactors.volunteerWork, 0, 5)
+      : 0.3;
+
+    const workExperienceScore = userProfile.hasWorkExperience
+      ? normalize(college.admissionFactors.workExperience, 0, 5)
+      : 0.3;
+
+    const characterScore = normalize(af.characterPersonal, 0, 5);
+
+    const firstGenScore = userProfile.isFirstGeneration
+      ? normalize(af.firstGeneration, 0, 5)
+      : 0.5;
+
+    const interestScore = af.demonstratedInterest > 0
+      ? normalize(userProfile.demonstratedInterest, 1, 5) * normalize(af.demonstratedInterest, 0, 5)
+      : 0.5;
+
     let internationalScore = 0.5;
-    
     if (userProfile.isInternationalStudent) {
       const englishScore = calculateEnglishProficiencyMatch(
         userProfile.englishProficiency,
         college.englishRequirements
       );
-      
       const visaSupportScore = normalize(college.visaSupport, 1, 5);
-      
-      const scholarshipScore = userProfile.needsScholarship && college.internationalScholarships ? 1.0 : 
-                              (userProfile.needsScholarship ? 0.2 : 0.8);
-      
+      const scholarshipScore = userProfile.needsScholarship && college.internationalScholarships
+        ? 1.0
+        : (userProfile.needsScholarship ? 0.2 : 0.8);
       internationalScore = (englishScore + visaSupportScore + scholarshipScore) / 3;
     }
-    
-    let totalScore = (
-      academicScore * weights.academics * 1.5 + 
-      majorScore * weights.major +
-      locationScore * weights.location +
-      financialScore * weights.financials +
-      lifestyleScore * weights.lifestyle +
-      academicRigorScore * weights.academics * 0.5 +
-      classRankScore * weights.academics * 0.5 +
-      essayScore * weights.essay +
-      recommendationScore * weights.recommendation +
+
+    // --- Weighted average: each score * its normalized weight ---
+    // Every term contributes proportionally, and the sum is guaranteed in [0, 1]
+    // because weights sum to 1 and every score is in [0, 1].
+    let totalScore =
+      academicScore        * weights.academics +
+      majorScore           * weights.major +
+      locationScore        * weights.location +
+      financialScore       * weights.financials +
+      lifestyleScore       * weights.lifestyle +
+      essayScore           * weights.essay +
+      recommendationScore  * weights.recommendation +
       extracurricularScore * weights.extracurricular +
-      talentScore * weights.specialTalent +
-      volunteerScore * weights.volunteerWork +
-      workExperienceScore * weights.workExperience
-    );
-    
+      talentScore          * weights.specialTalent +
+      volunteerScore       * weights.volunteerWork +
+      workExperienceScore  * weights.workExperience +
+      characterScore       * weights.character +
+      firstGenScore        * weights.firstGeneration +
+      interestScore        * weights.demonstratedInterest;
+
     if (userProfile.isInternationalStudent && weights.international !== undefined) {
       totalScore += internationalScore * weights.international;
     }
-    
-    const matchPercentage = Math.round(Math.min(totalScore * 100, 100));
-    
+
+    const matchPercentage = Math.round(totalScore * 100);
+
     const admissionFit = calculateAdmissionFit(userProfile, college);
     const percentiles = calculateAdmissionPercentiles(college);
-    
+
     const scores = {
-      gpaScore: gpaScore / gpaImportance,
-      testScore: testScore / testScoreImportance,
+      gpaScore,
+      testScore,
       academicScore,
       majorScore,
-      locationScore, 
+      locationScore,
       financialScore,
       lifestyleScore,
       sportsScore,
@@ -201,19 +239,10 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
       essayScore,
       extracurricularScore
     };
-    
-    const matchReasons = generateMatchReasons(
-      userProfile, 
-      college, 
-      scores
-    );
-    
-    const cautionPoints = generateCautionPoints(
-      userProfile,
-      college,
-      scores
-    );
-    
+
+    const matchReasons = generateMatchReasons(userProfile, college, scores);
+    const cautionPoints = generateCautionPoints(userProfile, college, scores);
+
     return {
       college,
       matchPercentage,
@@ -226,36 +255,6 @@ export function calculateCollegeMatches(userProfile: UserProfile, colleges: Coll
   }).sort((a, b) => b.matchPercentage - a.matchPercentage);
 }
 
-function calculateGpaMatch(userGpa: number, collegeGpa: number): number {
-  if (userGpa >= collegeGpa + 0.2) return 1.0;
-  if (userGpa >= collegeGpa) return 0.9;
-  const gap = collegeGpa - userGpa;
-  if (gap <= 0.3) return 0.7;
-  if (gap <= 0.5) return 0.5;
-  return Math.max(0, 1.0 - gap/collegeGpa * 1.5);
-}
-
-function calculateSatMatch(userSat: number, collegeSat: number): number {
-  if (!userSat || userSat === 0) return 0.5;
-  if (userSat >= collegeSat + 100) return 1.0;
-  if (userSat >= collegeSat) return 0.9;
-  const gap = collegeSat - userSat;
-  if (gap <= 50) return 0.8;
-  if (gap <= 100) return 0.6;
-  if (gap <= 200) return 0.4;
-  return Math.max(0, 1.0 - gap/600);
-}
-
-function calculateActMatch(userAct: number, collegeAct: number): number {
-  if (!userAct || userAct === 0) return 0.5;
-  if (userAct >= collegeAct + 3) return 1.0;
-  if (userAct >= collegeAct) return 0.9;
-  const gap = collegeAct - userAct;
-  if (gap <= 1) return 0.8;
-  if (gap <= 2) return 0.6;
-  if (gap <= 4) return 0.4;
-  return Math.max(0, 1.0 - gap/12);
-}
 
 function calculateMajorMatch(userMajor: string, collegeStrongMajors: string[]): number {
   if (collegeStrongMajors.includes(userMajor)) return 1.0;
@@ -423,10 +422,10 @@ function generateCautionPoints(
   
   if (scores.testScore && scores.testScore < 0.6) {
     if (user.satScore > 0) {
-      cautions.push(`Your SAT score (${user.satScore}) is below their average (${college.averageSAT})`);
+      cautions.push(`Your SAT score (${user.satScore}) is below their median (${college.testScores.sat50})`);
     }
     if (user.actScore > 0) {
-      cautions.push(`Your ACT score (${user.actScore}) is below their average (${college.averageACT})`);
+      cautions.push(`Your ACT score (${user.actScore}) is below their median (${college.testScores.act50})`);
     }
   }
   

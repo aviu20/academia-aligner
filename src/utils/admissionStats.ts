@@ -46,13 +46,12 @@ export interface AdmissionFitResult {
 }
 
 /**
- * Calculate admission percentiles based on average scores
- * This creates realistic distribution around the college's average
+ * Return admission percentiles from stored CDS data.
+ * GPA percentiles are still estimated since CDS doesn't always report them.
  */
 export function calculateAdmissionPercentiles(college: College): AdmissionPercentiles {
-  // GPA percentiles (typically narrow range for selective schools)
   const gpaRange = college.acceptanceRate < 0.1 ? 0.15 : 0.25;
-  
+
   return {
     gpa: {
       percentile25: Math.max(2.0, college.averageGPA - gpaRange),
@@ -60,63 +59,66 @@ export function calculateAdmissionPercentiles(college: College): AdmissionPercen
       percentile75: Math.min(4.0, college.averageGPA + (gpaRange * 0.5))
     },
     sat: {
-      percentile25: Math.max(800, college.averageSAT - 100),
-      percentile50: college.averageSAT,
-      percentile75: Math.min(1600, college.averageSAT + 80)
+      percentile25: college.testScores.sat25,
+      percentile50: college.testScores.sat50,
+      percentile75: college.testScores.sat75
     },
     act: {
-      percentile25: Math.max(10, college.averageACT - 3),
-      percentile50: college.averageACT,
-      percentile75: Math.min(36, college.averageACT + 2)
+      percentile25: college.testScores.act25,
+      percentile50: college.testScores.act50,
+      percentile75: college.testScores.act75
     }
   };
 }
 
 /**
- * Determine which percentile bucket a user falls into and what % of students
- * with similar scores get admitted
+ * Determine which percentile bucket a user falls into and estimate admission
+ * probability using the school's acceptance rate as a base.
+ *
+ * The key insight: being in the 75th percentile at MIT (4% acceptance) is very
+ * different from being in the 75th percentile at a 60% acceptance school.
+ * We modulate the base acceptance rate by bucket-specific multipliers.
  */
 export function calculateAdmissionFit(
   userProfile: UserProfile,
   college: College
 ): AdmissionFitResult {
   const percentiles = calculateAdmissionPercentiles(college);
-  
-  // Calculate GPA fit
+
   const gpaFit = calculateScoreFit(
     userProfile.gpa,
     percentiles.gpa.percentile25,
     percentiles.gpa.percentile50,
-    percentiles.gpa.percentile75
+    percentiles.gpa.percentile75,
+    college.acceptanceRate
   );
-  
-  // Calculate SAT fit
+
   const satFit = calculateScoreFit(
     userProfile.satScore,
     percentiles.sat.percentile25,
     percentiles.sat.percentile50,
-    percentiles.sat.percentile75
+    percentiles.sat.percentile75,
+    college.acceptanceRate
   );
-  
-  // Calculate ACT fit
+
   const actFit = calculateScoreFit(
     userProfile.actScore,
     percentiles.act.percentile25,
     percentiles.act.percentile50,
-    percentiles.act.percentile75
+    percentiles.act.percentile75,
+    college.acceptanceRate
   );
-  
-  // Determine weakest and strongest factors
+
   const factors = [
     { name: 'GPA' as const, rank: gpaFit.rank },
     { name: 'SAT' as const, rank: satFit.rank },
     { name: 'ACT' as const, rank: actFit.rank }
   ];
-  
+
   factors.sort((a, b) => a.rank - b.rank);
   const weakestFactor = factors[0].name;
   const strongestFactor = factors[2].name;
-  
+
   return {
     gpa: {
       userValue: userProfile.gpa,
@@ -155,42 +157,44 @@ function calculateScoreFit(
   userScore: number,
   p25: number,
   p50: number,
-  p75: number
+  p75: number,
+  acceptanceRate: number
 ): ScoreFitResult {
-  // 75th percentile or above (top 25% of admitted students)
+  // Bucket multipliers: how much more/less likely admission is relative to the
+  // base acceptance rate, depending on where the student's score falls among
+  // admitted students. These are rough but grounded in the shape of admission
+  // yield curves — top-quartile applicants are admitted at ~2.5x the base rate,
+  // bottom-quartile at ~0.3x.
   if (userScore >= p75) {
     return {
       bucket: '75+',
-      percentageAdmitted: 25, // Top 25% of admitted students
+      percentageAdmitted: Math.min(95, Math.round(acceptanceRate * 100 * 2.5)),
       status: 'strong',
       rank: 4
     };
   }
-  
-  // Between 50th and 75th percentile (middle 25%)
+
   if (userScore >= p50) {
     return {
       bucket: '50-75',
-      percentageAdmitted: 25, // Middle-upper 25%
+      percentageAdmitted: Math.min(85, Math.round(acceptanceRate * 100 * 1.5)),
       status: 'competitive',
       rank: 3
     };
   }
-  
-  // Between 25th and 50th percentile (middle-lower 25%)
+
   if (userScore >= p25) {
     return {
       bucket: '25-50',
-      percentageAdmitted: 25, // Middle-lower 25%
+      percentageAdmitted: Math.max(1, Math.round(acceptanceRate * 100 * 0.7)),
       status: 'competitive',
       rank: 2
     };
   }
-  
-  // Below 25th percentile (bottom 25%)
+
   return {
     bucket: '<25',
-    percentageAdmitted: 25, // Bottom 25%
+    percentageAdmitted: Math.max(1, Math.round(acceptanceRate * 100 * 0.3)),
     status: 'reach',
     rank: 1
   };

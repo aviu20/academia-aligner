@@ -1,11 +1,18 @@
+// CDS importance levels: Very Important = 5, Important = 3, Considered = 2, Not Considered = 0
 export interface College {
   id: string;
   name: string;
   location: string;
   acceptanceRate: number;
   averageGPA: number;
-  averageSAT: number;
-  averageACT: number;
+  testScores: {
+    sat25: number;
+    sat50: number;
+    sat75: number;
+    act25: number;
+    act50: number;
+    act75: number;
+  };
   tuition: number;
   strongMajors: string[];
   notableFacilities: string[];
@@ -16,11 +23,11 @@ export interface College {
   motto: string;
   image?: string;
   internationalStudentPercentage: number;
-  visaSupport: number; // 1-5 scale, how much support is provided
+  visaSupport: number; // 1-5 scale
   internationalScholarships: boolean;
   englishRequirements: {
-    toefl: number; // Minimum TOEFL score
-    ielts: number; // Minimum IELTS score
+    toefl: number;
+    ielts: number;
   };
   admissionFactors: {
     academicRigor: number;
@@ -33,17 +40,19 @@ export interface College {
     extracurricular: number;
     talentAbility: number;
     characterPersonal: number;
+    firstGeneration: number;
     alumniRelation: number;
     geographicResidence: number;
     stateResidency: number;
     religiousAffiliation: number;
-    racialEthnicity: number;
+    demonstratedInterest: number;
     volunteerWork: number;
     workExperience: number;
   };
 }
 
-// College dataset (expanded to include more US colleges)
+// Test score percentiles: MIT and NYU are from verified CDS 2024-25 data.
+// All others are estimated from prior averages and need CDS backfill.
 export const colleges: College[] = [
   {
     id: '1',
@@ -51,8 +60,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.04,
     averageGPA: 4.0,
-    averageSAT: 1500,
-    averageACT: 34,
+    testScores: { sat25: 1470, sat50: 1500, sat75: 1530, act25: 33, act50: 34, act75: 35 },
     tuition: 55000,
     strongMajors: ['Computer Science', 'Engineering', 'Business'],
     notableFacilities: ['Advanced Research Lab', 'Innovation Center'],
@@ -67,20 +75,21 @@ export const colleges: College[] = [
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
       academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
+    // Verified from MIT CDS 2024-25
     id: '2',
     name: 'MIT',
     location: 'East Coast',
-    acceptanceRate: 0.07,
+    acceptanceRate: 0.045,
     averageGPA: 4.0,
-    averageSAT: 1520,
-    averageACT: 35,
+    testScores: { sat25: 1520, sat50: 1550, sat75: 1570, act25: 34, act50: 35, act75: 36 },
     tuition: 57000,
     strongMajors: ['Computer Science', 'Engineering', 'Mathematics'],
     notableFacilities: ['Media Lab', 'Nuclear Reactor'],
@@ -94,11 +103,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 5, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 5, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 2,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -107,8 +117,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.16,
     averageGPA: 3.9,
-    averageSAT: 1430,
-    averageACT: 32,
+    testScores: { sat25: 1380, sat50: 1430, sat75: 1480, act25: 30, act50: 32, act75: 34 },
     tuition: 43000,
     strongMajors: ['Computer Science', 'Engineering', 'Economics'],
     notableFacilities: ['Lawrence Berkeley Lab', 'Berkeley Art Museum'],
@@ -122,11 +131,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 90, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 0, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 0, geographicResidence: 1,
-      stateResidency: 5, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 1, workExperience: 1
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 0, interview: 0, extracurricular: 3,
+      talentAbility: 3, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 5,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -135,8 +145,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.05,
     averageGPA: 4.0,
-    averageSAT: 1510,
-    averageACT: 34,
+    testScores: { sat25: 1480, sat50: 1510, sat75: 1540, act25: 33, act50: 34, act75: 35 },
     tuition: 54000,
     strongMajors: ['Economics', 'Political Science', 'Biology'],
     notableFacilities: ['Harvard Library', 'Memorial Hall'],
@@ -150,21 +159,22 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.5 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
       applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 3, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      talentAbility: 5, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 3, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
+    // Verified from NYU CDS 2024-25
     id: '5',
     name: 'New York University',
     location: 'East Coast',
-    acceptanceRate: 0.16,
+    acceptanceRate: 0.092,
     averageGPA: 3.7,
-    averageSAT: 1410,
-    averageACT: 31,
+    testScores: { sat25: 1480, sat50: 1520, sat75: 1550, act25: 34, act50: 34, act75: 35 },
     tuition: 53000,
     strongMajors: ['Business', 'Arts', 'Communications'],
     notableFacilities: ['Tisch School of the Arts', 'Stern School of Business'],
@@ -178,11 +188,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 3,
-      applicationEssay: 5, recommendation: 3, interview: 1, extracurricular: 3,
-      talentAbility: 5, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 0, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 0, extracurricular: 2,
+      talentAbility: 2, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -191,8 +202,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.23,
     averageGPA: 3.8,
-    averageSAT: 1400,
-    averageACT: 32,
+    testScores: { sat25: 1350, sat50: 1400, sat75: 1450, act25: 30, act50: 32, act75: 34 },
     tuition: 49000,
     strongMajors: ['Engineering', 'Business', 'Psychology'],
     notableFacilities: ['Michigan Stadium', 'Duderstadt Center'],
@@ -208,9 +218,10 @@ export const colleges: College[] = [
     admissionFactors: {
       academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 3,
       applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      talentAbility: 3, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -219,8 +230,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.15,
     averageGPA: 3.8,
-    averageSAT: 1470,
-    averageACT: 33,
+    testScores: { sat25: 1420, sat50: 1470, sat75: 1520, act25: 31, act50: 33, act75: 35 },
     tuition: 57000,
     strongMajors: ['Computer Science', 'Engineering', 'Fine Arts'],
     notableFacilities: ['Robotics Institute', 'Software Engineering Institute'],
@@ -235,10 +245,11 @@ export const colleges: College[] = [
     englishRequirements: { toefl: 102, ielts: 7.5 },
     admissionFactors: {
       academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 3, recommendation: 5, interview: 1, extracurricular: 3,
-      talentAbility: 5, characterPersonal: 3, alumniRelation: 0, geographicResidence: 0,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 1, workExperience: 3
+      applicationEssay: 3, recommendation: 5, interview: 2, extracurricular: 3,
+      talentAbility: 5, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 0, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -247,8 +258,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.14,
     averageGPA: 3.9,
-    averageSAT: 1405,
-    averageACT: 31,
+    testScores: { sat25: 1355, sat50: 1405, sat75: 1455, act25: 29, act50: 31, act75: 33 },
     tuition: 42000,
     strongMajors: ['Biology', 'Business Economics', 'Psychology'],
     notableFacilities: ['Pauley Pavilion', 'Fowler Museum'],
@@ -262,11 +272,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 3,
-      applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 0, geographicResidence: 1,
-      stateResidency: 5, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 1, workExperience: 1
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 3, recommendation: 0, interview: 0, extracurricular: 3,
+      talentAbility: 3, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 5,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -275,8 +286,7 @@ export const colleges: College[] = [
     location: 'South',
     acceptanceRate: 0.32,
     averageGPA: 3.7,
-    averageSAT: 1350,
-    averageACT: 30,
+    testScores: { sat25: 1280, sat50: 1350, sat75: 1420, act25: 27, act50: 30, act75: 33 },
     tuition: 38000,
     strongMajors: ['Engineering', 'Business', 'Computer Science'],
     notableFacilities: ['Texas Memorial Stadium', 'LBJ Library'],
@@ -292,9 +302,10 @@ export const colleges: College[] = [
     admissionFactors: {
       academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 3,
       applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 1, characterPersonal: 3, alumniRelation: 0, geographicResidence: 0,
-      stateResidency: 5, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 1, workExperience: 1
+      talentAbility: 2, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 0, stateResidency: 5,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -303,8 +314,7 @@ export const colleges: College[] = [
     location: 'South',
     acceptanceRate: 0.23,
     averageGPA: 3.8,
-    averageSAT: 1400,
-    averageACT: 32,
+    testScores: { sat25: 1350, sat50: 1400, sat75: 1450, act25: 30, act50: 32, act75: 34 },
     tuition: 33000,
     strongMajors: ['Engineering', 'Computer Science', 'Architecture'],
     notableFacilities: ['Technology Square', 'Klaus Advanced Computing Building'],
@@ -320,9 +330,10 @@ export const colleges: College[] = [
     admissionFactors: {
       academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
       applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 0, geographicResidence: 0,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 1, workExperience: 3
+      talentAbility: 3, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 0, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -331,8 +342,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.06,
     averageGPA: 3.9,
-    averageSAT: 1505,
-    averageACT: 34,
+    testScores: { sat25: 1480, sat50: 1505, sat75: 1540, act25: 33, act50: 34, act75: 35 },
     tuition: 52000,
     strongMajors: ['Engineering', 'Public Policy', 'Economics'],
     notableFacilities: ['Princeton University Art Museum', 'Frist Campus Center'],
@@ -346,11 +356,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
       applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -359,8 +370,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.06,
     averageGPA: 4.0,
-    averageSAT: 1510,
-    averageACT: 34,
+    testScores: { sat25: 1480, sat50: 1510, sat75: 1540, act25: 33, act50: 34, act75: 35 },
     tuition: 55500,
     strongMajors: ['Political Science', 'Economics', 'History'],
     notableFacilities: ['Yale University Art Gallery', 'Beinecke Rare Book Library'],
@@ -374,11 +384,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
       applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      talentAbility: 5, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -387,8 +398,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.05,
     averageGPA: 4.0,
-    averageSAT: 1505,
-    averageACT: 34,
+    testScores: { sat25: 1480, sat50: 1505, sat75: 1540, act25: 33, act50: 34, act75: 35 },
     tuition: 58000,
     strongMajors: ['Economics', 'Political Science', 'English'],
     notableFacilities: ['Butler Library', 'Low Memorial Library'],
@@ -402,11 +412,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -415,8 +426,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.07,
     averageGPA: 4.0,
-    averageSAT: 1520,
-    averageACT: 34,
+    testScores: { sat25: 1490, sat50: 1520, sat75: 1550, act25: 33, act50: 34, act75: 35 },
     tuition: 57000,
     strongMajors: ['Economics', 'Mathematics', 'Physics'],
     notableFacilities: ['Joe and Rika Mansueto Library', 'David Rubenstein Forum'],
@@ -430,10 +440,11 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 5,
       volunteerWork: 2, workExperience: 2
     }
   },
@@ -443,8 +454,7 @@ export const colleges: College[] = [
     location: 'South',
     acceptanceRate: 0.08,
     averageGPA: 4.0,
-    averageSAT: 1510,
-    averageACT: 34,
+    testScores: { sat25: 1480, sat50: 1510, sat75: 1540, act25: 33, act50: 34, act75: 35 },
     tuition: 55000,
     strongMajors: ['Public Policy', 'Economics', 'Biology'],
     notableFacilities: ['Cameron Indoor Stadium', 'Duke Chapel'],
@@ -458,11 +468,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
       applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -471,8 +482,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.09,
     averageGPA: 3.9,
-    averageSAT: 1495,
-    averageACT: 34,
+    testScores: { sat25: 1465, sat50: 1495, sat75: 1530, act25: 33, act50: 34, act75: 35 },
     tuition: 56000,
     strongMajors: ['Journalism', 'Performing Arts', 'Economics'],
     notableFacilities: ['Ryan Center for the Musical Arts', 'Kellogg Global Hub'],
@@ -486,11 +496,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 4, interview: 3, extracurricular: 5,
-      talentAbility: 5, characterPersonal: 4, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 5, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -499,8 +510,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.11,
     averageGPA: 3.9,
-    averageSAT: 1505,
-    averageACT: 34,
+    testScores: { sat25: 1455, sat50: 1505, sat75: 1555, act25: 32, act50: 34, act75: 35 },
     tuition: 55000,
     strongMajors: ['Medicine', 'International Relations', 'Biomedical Engineering'],
     notableFacilities: ['Milton S. Eisenhower Library', 'Bloomberg Center'],
@@ -514,11 +524,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 4, recommendation: 5, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 4, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -527,8 +538,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.08,
     averageGPA: 4.0,
-    averageSAT: 1500,
-    averageACT: 34,
+    testScores: { sat25: 1470, sat50: 1500, sat75: 1530, act25: 33, act50: 34, act75: 35 },
     tuition: 57000,
     strongMajors: ['Economics', 'Government', 'Computer Science'],
     notableFacilities: ['Baker-Berry Library', 'Hood Museum of Art'],
@@ -542,11 +552,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 5, interview: 4, extracurricular: 5,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 3, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 3, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -555,8 +566,7 @@ export const colleges: College[] = [
     location: 'South',
     acceptanceRate: 0.12,
     averageGPA: 3.8,
-    averageSAT: 1505,
-    averageACT: 34,
+    testScores: { sat25: 1455, sat50: 1505, sat75: 1555, act25: 32, act50: 34, act75: 35 },
     tuition: 52000,
     strongMajors: ['Economics', 'Education', 'Engineering'],
     notableFacilities: ['Wyatt Center', 'Jean and Alexander Heard Library'],
@@ -570,11 +580,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 4, recommendation: 4, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 4, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 3,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -583,8 +594,7 @@ export const colleges: College[] = [
     location: 'South',
     acceptanceRate: 0.11,
     averageGPA: 3.9,
-    averageSAT: 1505,
-    averageACT: 34,
+    testScores: { sat25: 1455, sat50: 1505, sat75: 1555, act25: 32, act50: 34, act75: 35 },
     tuition: 49000,
     strongMajors: ['Architecture', 'Engineering', 'Natural Sciences'],
     notableFacilities: ['Moody Center for the Arts', 'BioScience Research Collaborative'],
@@ -598,11 +608,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 5,
-      applicationEssay: 5, recommendation: 4, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 5,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -611,8 +622,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.19,
     averageGPA: 3.9,
-    averageSAT: 1445,
-    averageACT: 33,
+    testScores: { sat25: 1395, sat50: 1445, sat75: 1495, act25: 31, act50: 33, act75: 35 },
     tuition: 55000,
     strongMajors: ['Business', 'Architecture', 'Engineering'],
     notableFacilities: ['Hesburgh Library', 'Notre Dame Stadium'],
@@ -626,11 +636,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 5, recommendation: 4, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 3, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 3, racialEthnicity: 0,
-      volunteerWork: 4, workExperience: 2
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 3, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 3, demonstratedInterest: 2,
+      volunteerWork: 3, workExperience: 2
     }
   },
   {
@@ -639,8 +650,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.24,
     averageGPA: 3.9,
-    averageSAT: 1430,
-    averageACT: 32,
+    testScores: { sat25: 1380, sat50: 1430, sat75: 1480, act25: 30, act50: 32, act75: 34 },
     tuition: 50000,
     strongMajors: ['Business', 'Law', 'Liberal Arts'],
     notableFacilities: ['The Lawn', 'Alderman Library'],
@@ -654,11 +664,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 90, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 4, recommendation: 3, interview: 1, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 4, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 3, interview: 2, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -667,8 +678,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.17,
     averageGPA: 3.9,
-    averageSAT: 1450,
-    averageACT: 33,
+    testScores: { sat25: 1400, sat50: 1450, sat75: 1500, act25: 31, act50: 33, act75: 35 },
     tuition: 56000,
     strongMajors: ['International Relations', 'Political Science', 'Business'],
     notableFacilities: ['Lauinger Library', 'Healy Hall'],
@@ -682,11 +692,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 5, recommendation: 4, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 5, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 2, racialEthnicity: 0,
-      volunteerWork: 4, workExperience: 3
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 2, demonstratedInterest: 3,
+      volunteerWork: 3, workExperience: 2
     }
   },
   {
@@ -695,8 +706,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.14,
     averageGPA: 3.9,
-    averageSAT: 1405,
-    averageACT: 31,
+    testScores: { sat25: 1355, sat50: 1405, sat75: 1455, act25: 29, act50: 31, act75: 33 },
     tuition: 42000,
     strongMajors: ['Film', 'Business', 'Psychology'],
     notableFacilities: ['Royce Hall', 'Powell Library'],
@@ -710,11 +720,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 3,
-      applicationEssay: 4, recommendation: 3, interview: 0, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 4, alumniRelation: 0, geographicResidence: 1,
-      stateResidency: 5, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 0, interview: 0, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 5,
+      religiousAffiliation: 0, demonstratedInterest: 0,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -723,8 +734,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.16,
     averageGPA: 3.8,
-    averageSAT: 1440,
-    averageACT: 32,
+    testScores: { sat25: 1390, sat50: 1440, sat75: 1490, act25: 30, act50: 32, act75: 34 },
     tuition: 58000,
     strongMajors: ['Film', 'Business', 'Communications'],
     notableFacilities: ['Doheny Library', 'Bing Theatre'],
@@ -738,11 +748,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 4, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 5, recommendation: 4, interview: 2, extracurricular: 4,
-      talentAbility: 5, characterPersonal: 4, alumniRelation: 2, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 5,
+      talentAbility: 5, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 3,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -751,8 +762,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.6,
     averageGPA: 3.8,
-    averageSAT: 1365,
-    averageACT: 29,
+    testScores: { sat25: 1295, sat50: 1365, sat75: 1435, act25: 26, act50: 29, act75: 32 },
     tuition: 33000,
     strongMajors: ['Engineering', 'Computer Science', 'Business'],
     notableFacilities: ['Grainger Engineering Library', 'Krannert Center'],
@@ -766,11 +776,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 103, ielts: 7.5 },
     admissionFactors: {
-      academicRigor: 5, classRank: 5, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 2, workExperience: 3
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 3, recommendation: 2, interview: 0, extracurricular: 2,
+      talentAbility: 2, characterPersonal: 2, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 2,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -779,8 +790,7 @@ export const colleges: College[] = [
     location: 'West Coast',
     acceptanceRate: 0.52,
     averageGPA: 3.8,
-    averageSAT: 1340,
-    averageACT: 30,
+    testScores: { sat25: 1270, sat50: 1340, sat75: 1410, act25: 27, act50: 30, act75: 33 },
     tuition: 38000,
     strongMajors: ['Computer Science', 'Engineering', 'Business'],
     notableFacilities: ['Suzzallo Library', 'Husky Union Building'],
@@ -794,10 +804,11 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 92, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 4, academicGPA: 5, standardizedTests: 3,
-      applicationEssay: 4, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 2, characterPersonal: 3, alumniRelation: 0, geographicResidence: 1,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 2, interview: 0, extracurricular: 3,
+      talentAbility: 2, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 0, geographicResidence: 2, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 0,
       volunteerWork: 2, workExperience: 2
     }
   },
@@ -807,8 +818,7 @@ export const colleges: College[] = [
     location: 'Midwest',
     acceptanceRate: 0.57,
     averageGPA: 3.8,
-    averageSAT: 1390,
-    averageACT: 30,
+    testScores: { sat25: 1320, sat50: 1390, sat75: 1460, act25: 27, act50: 30, act75: 33 },
     tuition: 38000,
     strongMajors: ['Business', 'Engineering', 'Education'],
     notableFacilities: ['Memorial Union Terrace', 'College Library'],
@@ -822,10 +832,11 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 95, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 4, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 3, recommendation: 3, interview: 0, extracurricular: 3,
-      talentAbility: 2, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 3, religiousAffiliation: 0, racialEthnicity: 0,
+      academicRigor: 5, classRank: 3, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 3, recommendation: 2, interview: 0, extracurricular: 2,
+      talentAbility: 2, characterPersonal: 2, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 3,
+      religiousAffiliation: 0, demonstratedInterest: 2,
       volunteerWork: 2, workExperience: 2
     }
   },
@@ -835,8 +846,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.22,
     averageGPA: 3.7,
-    averageSAT: 1420,
-    averageACT: 32,
+    testScores: { sat25: 1370, sat50: 1420, sat75: 1470, act25: 30, act50: 32, act75: 34 },
     tuition: 57000,
     strongMajors: ['Business', 'Communications', 'International Relations'],
     notableFacilities: ['Mugar Memorial Library', 'Photonics Center'],
@@ -850,11 +860,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 90, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 4, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 4, recommendation: 4, interview: 2, extracurricular: 3,
-      talentAbility: 3, characterPersonal: 3, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 3
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 2, extracurricular: 3,
+      talentAbility: 3, characterPersonal: 3, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 3,
+      volunteerWork: 2, workExperience: 2
     }
   },
   {
@@ -863,8 +874,7 @@ export const colleges: College[] = [
     location: 'East Coast',
     acceptanceRate: 0.16,
     averageGPA: 3.9,
-    averageSAT: 1445,
-    averageACT: 33,
+    testScores: { sat25: 1395, sat50: 1445, sat75: 1495, act25: 31, act50: 33, act75: 35 },
     tuition: 58000,
     strongMajors: ['International Relations', 'Engineering', 'Medicine'],
     notableFacilities: ['Tisch Library', 'Granoff Music Center'],
@@ -878,11 +888,12 @@ export const colleges: College[] = [
     internationalScholarships: true,
     englishRequirements: { toefl: 100, ielts: 7.0 },
     admissionFactors: {
-      academicRigor: 5, classRank: 4, academicGPA: 5, standardizedTests: 4,
-      applicationEssay: 5, recommendation: 4, interview: 3, extracurricular: 4,
-      talentAbility: 3, characterPersonal: 4, alumniRelation: 1, geographicResidence: 1,
-      stateResidency: 0, religiousAffiliation: 0, racialEthnicity: 0,
-      volunteerWork: 3, workExperience: 2
+      academicRigor: 5, classRank: 2, academicGPA: 5, standardizedTests: 3,
+      applicationEssay: 5, recommendation: 5, interview: 3, extracurricular: 5,
+      talentAbility: 3, characterPersonal: 5, firstGeneration: 2,
+      alumniRelation: 2, geographicResidence: 2, stateResidency: 0,
+      religiousAffiliation: 0, demonstratedInterest: 3,
+      volunteerWork: 2, workExperience: 2
     }
   }
 ];
